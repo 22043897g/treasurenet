@@ -21,14 +21,18 @@ import (
 // an intermediate structure which is logged if the context has a logger
 // defined.
 func (ctx Context) BroadcastTx(txBytes []byte) (res *sdk.TxResponse, err error) {
+	fmt.Println("广播开始")
 	switch ctx.BroadcastMode {
 	case flags.BroadcastSync:
+		fmt.Printf("flags.BroadcastSync:%+v\n", flags.BroadcastSync)
 		res, err = ctx.BroadcastTxSync(txBytes)
 
 	case flags.BroadcastAsync:
+		fmt.Printf("flags.BroadcastAsync:%+v\n", flags.BroadcastAsync)
 		res, err = ctx.BroadcastTxAsync(txBytes)
 
 	case flags.BroadcastBlock:
+		fmt.Printf("flags.BroadcastAsync:%+v\n", flags.BroadcastAsync)
 		res, err = ctx.BroadcastTxCommit(txBytes)
 
 	default:
@@ -108,12 +112,14 @@ func (ctx Context) BroadcastTxCommit(txBytes []byte) (*sdk.TxResponse, error) {
 // BroadcastTxSync broadcasts transaction bytes to a Tendermint node
 // synchronously (i.e. returns after CheckTx execution).
 func (ctx Context) BroadcastTxSync(txBytes []byte) (*sdk.TxResponse, error) {
+	fmt.Println("广播开始了")
 	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
 	}
 
 	res, err := node.BroadcastTxSync(context.Background(), txBytes)
+	fmt.Printf("res=%+v\n", res)
 	if errRes := CheckTendermintError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}
@@ -140,6 +146,7 @@ func (ctx Context) BroadcastTxAsync(txBytes []byte) (*sdk.TxResponse, error) {
 // TxServiceBroadcast is a helper function to broadcast a Tx with the correct gRPC types
 // from the tx service. Calls `clientCtx.BroadcastTx` under the hood.
 func TxServiceBroadcast(grpcCtx context.Context, clientCtx Context, req *tx.BroadcastTxRequest) (*tx.BroadcastTxResponse, error) {
+	fmt.Printf("req参数表示:%+v", req)
 	if req == nil || req.TxBytes == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}

@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -268,6 +269,7 @@ func (c *baseRPCClient) BroadcastTxSync(
 	ctx context.Context,
 	tx types.Tx,
 ) (*ctypes.ResultBroadcastTx, error) {
+	fmt.Println("测试广播")
 	return c.broadcastTX(ctx, "broadcast_tx_sync", tx)
 }
 

@@ -320,6 +320,11 @@ func (m *MsgBeginRedelegate) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgBeginRedelegate proto.InternalMessageInfo
 
+type MsgGetPubkey struct {
+	Pubkey         string `protobuf:"bytes,1,opt,name=pubkey,json=pubkey,proto3" json:"pubkey,omitempty" yaml:"pubkey"`
+	AccountAddress string `protobuf:"bytes,2,opt,name=account_address,json=account_address,proto3" json:"account_address,omitempty" yaml:"account_address"`
+}
+
 // MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
 type MsgBeginRedelegateResponse struct {
 	CompletionTime time.Time `protobuf:"bytes,1,opt,name=completion_time,json=completionTime,proto3,stdtime" json:"completion_time"`

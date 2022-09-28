@@ -61,7 +61,7 @@ func (k Keeper) PowerReduction(ctx sdk.Context) sdk.Int {
 	return sdk.DefaultPowerReduction
 }
 
-//修改曲剧变了 目前，这将返回一个全局变量，应用程序开发人员可以调整该变量
+//This returns a global variable that the application developer can adjust
 func (k Keeper) PowerReduction2(ctx sdk.Context) sdk.Int {
 	return sdk.DefaultPowerReduction2
 }

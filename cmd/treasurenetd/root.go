@@ -30,15 +30,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	"github.com/treasurenet/app"
-	treasurenetclient "github.com/treasurenet/client"
-	"github.com/treasurenet/client/debug"
-	"github.com/treasurenet/crypto/hd"
-	"github.com/treasurenet/encoding"
-	"github.com/treasurenet/server"
-	servercfg "github.com/treasurenet/server/config"
-	srvflags "github.com/treasurenet/server/flags"
-	treasurenet "github.com/treasurenet/types"
+	// "github.com/evmos/ethermint/app"
+	// ethermintclient "github.com/evmos/ethermint/client"
+	// "github.com/evmos/ethermint/client/debug"
+	// "github.com/evmos/ethermint/crypto/hd"
+	// "github.com/evmos/ethermint/encoding"
+	// "github.com/evmos/ethermint/server"
+	// servercfg "github.com/evmos/ethermint/server/config"
+	// srvflags "github.com/evmos/ethermint/server/flags"
+	// ethermint "github.com/evmos/ethermint/types"
+
+	"github.com/treasurenetprotocol/treasurenet/app"
+	ethermintclient "github.com/treasurenetprotocol/treasurenet/client"
+	"github.com/treasurenetprotocol/treasurenet/client/debug"
+	"github.com/treasurenetprotocol/treasurenet/crypto/hd"
+	"github.com/treasurenetprotocol/treasurenet/encoding"
+	"github.com/treasurenetprotocol/treasurenet/server"
+	servercfg "github.com/treasurenetprotocol/treasurenet/server/config"
+	srvflags "github.com/treasurenetprotocol/treasurenet/server/flags"
+	ethermint "github.com/treasurenetprotocol/treasurenet/types"
 )
 
 const EnvPrefix = "TREASURENET"
@@ -67,9 +77,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
-			initClientCtx = client.ReadHomeFlag(initClientCtx, cmd)
+			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
-			initClientCtx, err := config.ReadFromClientConfig(initClientCtx)
+			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
 			if err != nil {
 				return err
 			}
@@ -78,7 +91,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 
-			customAppTemplate, customAppConfig := servercfg.AppConfig(treasurenet.AttoPhoton)
+			// FIXME: replace AttoPhoton with bond denom
+			customAppTemplate, customAppConfig := servercfg.AppConfig(ethermint.AttoPhoton)
 
 			return sdkserver.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
 		},
@@ -91,16 +105,16 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		treasurenetclient.ValidateChainID(
+		ethermintclient.ValidateChainID(
 			genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
-		genutilcli.MigrateGenesisCmd(),
+		genutilcli.MigrateGenesisCmd(), // TODO: shouldn't this include the local app version instead of the SDK?
 		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		treasurenetclient.TestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
 	)
@@ -113,9 +127,13 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		treasurenetclient.KeyCommands(app.DefaultNodeHome),
+		ethermintclient.KeyCommands(app.DefaultNodeHome),
 	)
-	rootCmd = srvflags.AddTxFlags(rootCmd)
+
+	rootCmd, err := srvflags.AddTxFlags(rootCmd)
+	if err != nil {
+		panic(err)
+	}
 
 	// add rosetta
 	rootCmd.AddCommand(sdkserver.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
@@ -183,7 +201,6 @@ type appCreator struct {
 
 // newApp is an appCreator
 func (a appCreator) newApp(logger tmlog.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
-
 	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(sdkserver.FlagInterBlockCache)) {
@@ -210,7 +227,7 @@ func (a appCreator) newApp(logger tmlog.Logger, db dbm.DB, traceStore io.Writer,
 		panic(err)
 	}
 
-	treasurenetApp := app.NewTreasurenetApp(
+	ethermintApp := app.NewEthermintApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(sdkserver.FlagInvCheckPeriod)),
@@ -229,7 +246,7 @@ func (a appCreator) newApp(logger tmlog.Logger, db dbm.DB, traceStore io.Writer,
 		baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(sdkserver.FlagStateSyncSnapshotKeepRecent))),
 	)
 
-	return treasurenetApp
+	return ethermintApp
 }
 
 // appExport creates a new simapp (optionally at a given height)
@@ -238,22 +255,21 @@ func (a appCreator) appExport(
 	logger tmlog.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
 ) (servertypes.ExportedApp, error) {
-
-	var treasurenetApp *app.TreasurenetApp
+	var ethermintApp *app.EthermintApp
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
 
 	if height != -1 {
-		treasurenetApp = app.NewTreasurenetApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), a.encCfg, appOpts)
+		ethermintApp = app.NewEthermintApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), a.encCfg, appOpts)
 
-		if err := treasurenetApp.LoadHeight(height); err != nil {
+		if err := ethermintApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		treasurenetApp = app.NewTreasurenetApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), a.encCfg, appOpts)
+		ethermintApp = app.NewEthermintApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), a.encCfg, appOpts)
 	}
 
-	return treasurenetApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	return ethermintApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }

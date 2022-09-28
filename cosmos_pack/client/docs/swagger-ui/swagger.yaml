@@ -1670,6 +1670,282 @@ paths:
           description: Key password is wrong
         '500':
           description: Internal Server Error
+ '/staking/delegators/{delegatorAddr}/getPubkey':
+    parameters:
+      - in: path
+        name: delegatorAddr
+        description: Bech32 AccAddress of Delegator
+        required: true
+        type: string
+        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
+    post:
+      summary: Submit delegation
+      parameters:
+        - in: body
+          name: delegation
+          description: Delegate an amount of liquid coins to a validator
+          schema:
+            type: object
+            properties:
+              base_req:
+                type: object
+                properties:
+                  from:
+                    type: string
+                    example: cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc
+                    description: Sender address or Keybase name to generate a transaction
+                  memo:
+                    type: string
+                    example: "Sent via Cosmos Voyager \U0001F680"
+                  chain_id:
+                    type: string
+                    example: Cosmos-Hub
+                  account_number:
+                    type: string
+                    example: '0'
+                  sequence:
+                    type: string
+                    example: '1'
+                  gas:
+                    type: string
+                    example: '200000'
+                  gas_adjustment:
+                    type: string
+                    example: '1.2'
+                  fees:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                          example: stake
+                        amount:
+                          type: string
+                          example: '50'
+                  simulate:
+                    type: boolean
+                    example: false
+                    description: >-
+                      Estimate gas for a transaction (cannot be used in
+                      conjunction with generate_only)
+              delegator_address:
+                type: string
+                description: bech32 encoded address
+                example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
+              validator_address:
+                type: string
+                description: bech32 encoded address
+                example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
+              amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                    example: stake
+                  amount:
+                    type: string
+                    example: '50'
+      tags:
+        - Staking
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              msg:
+                type: array
+                items:
+                  type: string
+              fee:
+                type: object
+                properties:
+                  gas:
+                    type: string
+                  amount:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                          example: stake
+                        amount:
+                          type: string
+                          example: '50'
+              memo:
+                type: string
+              signature:
+                type: object
+                properties:
+                  signature:
+                    type: string
+                    example: >-
+                      MEUCIQD02fsDPra8MtbRsyB1w7bqTM55Wu138zQbFcWx4+CFyAIge5WNPfKIuvzBZ69MyqHsqD8S1IwiEp+iUb6VSdtlpgY=
+                  pub_key:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: tendermint/PubKeySecp256k1
+                      value:
+                        type: string
+                        example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
+                  account_number:
+                    type: string
+                    example: '0'
+                  sequence:
+                    type: string
+                    example: '0'
+        '400':
+          description: Invalid delegator address or delegation request body
+        '401':
+          description: Key password is wrong
+        '500':
+          description: Internal Server Error
+  '/staking/delegators/{delegatorAddr}/delegationssimulate':
+    parameters:
+      - in: path
+        name: delegatorAddr
+        description: Bech32 AccAddress of Delegator
+        required: true
+        type: string
+        x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
+    post:
+      summary: Submit delegation
+      parameters:
+        - in: body
+          name: delegation
+          description: Delegate an amount of liquid coins to a validator
+          schema:
+            type: object
+            properties:
+              base_req:
+                type: object
+                properties:
+                  from:
+                    type: string
+                    example: cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc
+                    description: Sender address or Keybase name to generate a transaction
+                  memo:
+                    type: string
+                    example: "Sent via Cosmos Voyager \U0001F680"
+                  chain_id:
+                    type: string
+                    example: Cosmos-Hub
+                  account_number:
+                    type: string
+                    example: '0'
+                  sequence:
+                    type: string
+                    example: '1'
+                  gas:
+                    type: string
+                    example: '200000'
+                  gas_adjustment:
+                    type: string
+                    example: '1.2'
+                  fees:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                          example: stake
+                        amount:
+                          type: string
+                          example: '50'
+                  simulate:
+                    type: boolean
+                    example: false
+                    description: >-
+                      Estimate gas for a transaction (cannot be used in
+                      conjunction with generate_only)
+              delegator_address:
+                type: string
+                description: bech32 encoded address
+                example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
+              validator_address:
+                type: string
+                description: bech32 encoded address
+                example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
+              amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                    example: stake
+                  amount:
+                    type: string
+                    example: '50'
+      tags:
+        - Staking
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              msg:
+                type: array
+                items:
+                  type: string
+              fee:
+                type: object
+                properties:
+                  gas:
+                    type: string
+                  amount:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                          example: stake
+                        amount:
+                          type: string
+                          example: '50'
+              memo:
+                type: string
+              signature:
+                type: object
+                properties:
+                  signature:
+                    type: string
+                    example: >-
+                      MEUCIQD02fsDPra8MtbRsyB1w7bqTM55Wu138zQbFcWx4+CFyAIge5WNPfKIuvzBZ69MyqHsqD8S1IwiEp+iUb6VSdtlpgY=
+                  pub_key:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: tendermint/PubKeySecp256k1
+                      value:
+                        type: string
+                        example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
+                  account_number:
+                    type: string
+                    example: '0'
+                  sequence:
+                    type: string
+                    example: '0'
+        '400':
+          description: Invalid delegator address or delegation request body
+        '401':
+          description: Key password is wrong
+        '500':
+          description: Internal Server Error
   '/staking/delegators/{delegatorAddr}/delegations/{validatorAddr}':
     parameters:
       - in: path

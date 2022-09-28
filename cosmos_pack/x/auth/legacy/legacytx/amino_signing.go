@@ -41,7 +41,7 @@ func (stdTxSignModeHandler) GetSignBytes(mode signingtypes.SignMode, data signin
 	if !ok {
 		return nil, fmt.Errorf("expected %T, got %T", StdTx{}, tx)
 	}
-
+	fmt.Println("测试生成bytetostring2")
 	return StdSignBytes(
 		data.ChainID, data.AccountNumber, data.Sequence, stdTx.GetTimeoutHeight(), StdFee{Amount: stdTx.GetFee(), Gas: stdTx.GetGas()}, tx.GetMsgs(), stdTx.GetMemo(),
 	), nil

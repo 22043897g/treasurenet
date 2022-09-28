@@ -146,6 +146,9 @@ func ZeroInt() Int { return Int{big.NewInt(0)} }
 // OneInt returns Int value with one
 func OneInt() Int { return Int{big.NewInt(1)} }
 
+// TwoInt returns Int value with one
+func TwoInt() Int { return Int{big.NewInt(2)} }
+
 // ToDec converts Int to Dec
 func (i Int) ToDec() Dec {
 	return NewDecFromInt(i)

@@ -11,8 +11,8 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	clientkeys "github.com/treasurenet/client/keys"
-	"github.com/treasurenet/crypto/hd"
+	clientkeys "github.com/treasurenetprotocol/treasurenet/client/keys"
+	"github.com/treasurenetprotocol/treasurenet/crypto/hd"
 )
 
 // KeyCommands registers a sub-tree of commands to interact with
@@ -76,7 +76,7 @@ The pass backend requires GnuPG: https://gnupg.org/
 
 	cmd.PersistentFlags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.PersistentFlags().String(flags.FlagKeyringDir, "", "The client Keyring directory; if omitted, the default 'home' directory will be used")
-	cmd.PersistentFlags().String(flags.FlagKeyringBackend, keyring.BackendFile, "Select keyring's backend (os|file|test)")
+	cmd.PersistentFlags().String(flags.FlagKeyringBackend, keyring.BackendOS, "Select keyring's backend (os|file|test)")
 	cmd.PersistentFlags().String(cli.OutputFlag, "text", "Output format (text|json)")
 	return cmd
 }
@@ -93,14 +93,12 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
 	if dryRun {
 		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, clientCtx.KeyringDir, buf, hd.EthSecp256k1Option())
-	} else {
-		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-		kr, err = keyring.New(sdk.KeyringServiceName(), backend, clientCtx.KeyringDir, buf, hd.EthSecp256k1Option())
+		clientCtx = clientCtx.WithKeyring(kr)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	return clientkeys.RunAddCmd(clientCtx.WithKeyring(kr), cmd, args, buf)
+	return clientkeys.RunAddCmd(clientCtx, cmd, args, buf)
 }

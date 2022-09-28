@@ -157,13 +157,12 @@ func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 	if !ok {
 		return fmt.Errorf("cannot protobuf JSON decode unsupported type: %T", ptr)
 	}
-
+	// fmt.Printf("pc.interfaceRegistry:%+v\n", pc.interfaceRegistry)
 	unmarshaler := jsonpb.Unmarshaler{AnyResolver: pc.interfaceRegistry}
 	err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), m)
 	if err != nil {
 		return err
 	}
-
 	return types.UnpackInterfaces(ptr, pc.interfaceRegistry)
 }
 

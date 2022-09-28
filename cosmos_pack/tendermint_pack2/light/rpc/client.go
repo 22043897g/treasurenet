@@ -199,6 +199,7 @@ func (c *Client) BroadcastTxAsync(ctx context.Context, tx types.Tx) (*ctypes.Res
 }
 
 func (c *Client) BroadcastTxSync(ctx context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+	fmt.Println("测试广播6")
 	return c.next.BroadcastTxSync(ctx, tx)
 }
 

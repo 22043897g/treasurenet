@@ -63,7 +63,7 @@ func (k Keeper) GetTatTokens2(ctx sdk.Context, addr sdk.ValAddress) (TatTokens s
 	if err != nil {
 		return sdk.ZeroInt(), false
 	} else {
-		fmt.Println("newtat:", TatTokens)
+		//fmt.Println("newtat:", TatTokens)
 		return TatTokens, true
 	}
 	//strtat, _ := sdk.NewIntFromString(string(value))
@@ -96,7 +96,7 @@ func (k Keeper) GetNewTokens2(ctx sdk.Context, addr sdk.ValAddress) (NewTokens s
 	if err != nil {
 		return sdk.ZeroInt(), false
 	} else {
-		fmt.Println("newunit:", NewTokens)
+		//fmt.Println("newunit:", NewTokens)
 		return NewTokens, true
 	}
 	// NewTokens = newtat
@@ -309,7 +309,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 // Update the tokens of an existing validator, update the validators tat power index key
 func (k Keeper) AddValidatorTatTokensAndShares(ctx sdk.Context, validator types.Validator,
 	tokensToAdd sdk.Int) (valOut types.Validator, addedShares sdk.Dec) {
-	k.DeleteValidatorByTatPowerIndex(ctx, validator)
+
 	validator, addedShares = validator.AddTatTokensFromDel(tokensToAdd)
 	k.SetValidator(ctx, validator)
 	k.SetNewValidatorByPowerIndex(ctx, validator)

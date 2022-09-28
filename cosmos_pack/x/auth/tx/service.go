@@ -94,7 +94,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 // Simulate implements the ServiceServer.Simulate RPC method.
 func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*txtypes.SimulateResponse, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx,ceshi1")
 	}
 
 	txBytes := req.TxBytes
@@ -150,6 +150,7 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 }
 
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
+	fmt.Println("测试广播9")
 	return client.TxServiceBroadcast(ctx, s.clientCtx, req)
 }
 

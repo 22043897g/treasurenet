@@ -11,10 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/treasurenetprotocol/treasurenet/crypto/ethsecp256k1"
 
-	"github.com/treasurenet/crypto/ethsecp256k1"
-
-	"github.com/treasurenet/crypto/hd"
+	"github.com/treasurenetprotocol/treasurenet/crypto/hd"
 )
 
 // UnsafeImportKeyCommand imports private keys from a keyfile.

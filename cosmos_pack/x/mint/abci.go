@@ -63,7 +63,10 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// mintedCoin := minter.BlockProvision(params)
 	// mintedCoins := sdk.NewCoins(mintedCoin)
 	//New chain assets
-	NewmintedCoin := minter.NewBlockProvision(params, uint64(params.BlocksPerYear))
+	NewmintedCoin := sdk.NewCoin(params.MintDenom, NewAccumulateTat.TruncateInt())
+	//The reward of each block previously calculated according to the number of blocks produced each year is now a fixed value of 5unit
+	//NewmintedCoin := minter.NewBlockProvision(params, uint64(params.BlocksPerYear))
+	fmt.Println("NewmintedCoin:", NewmintedCoin)
 	//The cumulative output of Tat in one year unitgrant monitors the contract to obtain Tat output when the height of the block reaches the height of one year. When it reaches the height of the second year, it monitors again. At this time, the Tat output is the total output of two years. The total output of two years - the output of the first year (unitgrant) is used to calculate the inflation rate of the third year
 	//UnitGrant += NewmintedCoin.Amount.Int64()
 	//params.UnitGrant = uint64(UnitGrant)

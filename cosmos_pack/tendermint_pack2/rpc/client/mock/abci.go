@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/bytes"
@@ -76,10 +77,12 @@ func (a ABCIApp) BroadcastTxAsync(ctx context.Context, tx types.Tx) (*ctypes.Res
 }
 
 func (a ABCIApp) BroadcastTxSync(ctx context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
-	c := a.App.CheckTx(abci.RequestCheckTx{Tx: tx})
+	fmt.Println("测试广播4")
+	c := a.App.CheckTx(abci.RequestCheckTx{Tx: tx}) //Validate a tx for the mempool
+	fmt.Printf("c:%+v\n", c)
 	// and this gets written in a background thread...
 	if !c.IsErr() {
-		go func() { a.App.DeliverTx(abci.RequestDeliverTx{Tx: tx}) }()
+		go func() { a.App.DeliverTx(abci.RequestDeliverTx{Tx: tx}) }() //发送一个tx以进行完全处理
 	}
 	return &ctypes.ResultBroadcastTx{
 		Code:      c.Code,
@@ -142,6 +145,7 @@ func (m ABCIMock) BroadcastTxAsync(ctx context.Context, tx types.Tx) (*ctypes.Re
 }
 
 func (m ABCIMock) BroadcastTxSync(ctx context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+	fmt.Println("测试广播7")
 	res, err := m.Broadcast.GetResponse(tx)
 	if err != nil {
 		return nil, err
@@ -230,6 +234,7 @@ func (r *ABCIRecorder) BroadcastTxAsync(ctx context.Context, tx types.Tx) (*ctyp
 }
 
 func (r *ABCIRecorder) BroadcastTxSync(ctx context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+	fmt.Println("测试广播3")
 	res, err := r.Client.BroadcastTxSync(ctx, tx)
 	r.addCall(Call{
 		Name:     "broadcast_tx_sync",

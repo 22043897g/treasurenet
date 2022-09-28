@@ -97,7 +97,7 @@ func (m Minter) BlockProvision(params Params) sdk.Coin {
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }
 
-// BlockProvision returns the provisions for a block based on the annual 新的根据年度返回区块的规定
+// BlockProvision returns the provisions for a block based on the annual
 func (m Minter) NewBlockProvision(params Params, newnumber uint64) sdk.Coin {
 	provisionAmt := m.NewAnnualProvisions.QuoInt(sdk.NewInt(int64(newnumber)))
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())

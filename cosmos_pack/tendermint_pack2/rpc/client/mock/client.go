@@ -16,6 +16,7 @@ want to directly call a tendermint node in process, you can use the
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/tendermint/tendermint/libs/bytes"
@@ -109,6 +110,7 @@ func (c Client) BroadcastTxAsync(ctx context.Context, tx types.Tx) (*ctypes.Resu
 }
 
 func (c Client) BroadcastTxSync(ctx context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+	fmt.Println("测试广播2")
 	return core.BroadcastTxSync(&rpctypes.Context{}, tx)
 }
 

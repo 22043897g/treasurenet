@@ -13,7 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/treasurenet/encoding"
+	// "github.com/evmos/ethermint/encoding"
+	"github.com/treasurenetprotocol/treasurenet/encoding"
 )
 
 // NewDefaultGenesisState generates the default state for the application.
@@ -24,10 +25,9 @@ func NewDefaultGenesisState() simapp.GenesisState {
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
-func (app *TreasurenetApp) ExportAppStateAndValidators(
+func (app *EthermintApp) ExportAppStateAndValidators(
 	forZeroHeight bool, jailAllowedAddrs []string,
 ) (servertypes.ExportedApp, error) {
-
 	// Creates context with current height and checks txs for ctx to be usable by start of next block
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
@@ -63,8 +63,8 @@ func (app *TreasurenetApp) ExportAppStateAndValidators(
 
 // prepare for fresh start at zero height
 // NOTE zero height genesis is a temporary feature which will be deprecated
-//      in favor of export at a block height
-func (app *TreasurenetApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) error {
+// in favor of export at a block height
+func (app *EthermintApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) error {
 	applyAllowedAddrs := false
 
 	// check if there is a allowed address list
@@ -87,7 +87,7 @@ func (app *TreasurenetApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowed
 
 	/* Handle fee distribution state. */
 
-	// withdraw all validator commission 撤销所有验证者佣金
+	// withdraw all validator commission
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
 		return false
@@ -171,7 +171,6 @@ func (app *TreasurenetApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowed
 	// update bond intra-tx counters.
 	store := ctx.KVStore(app.keys[stakingtypes.StoreKey])
 	iter := sdk.KVStoreReversePrefixIterator(store, stakingtypes.ValidatorsKey)
-	counter := int16(0)
 
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
@@ -186,10 +185,11 @@ func (app *TreasurenetApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowed
 		}
 
 		app.StakingKeeper.SetValidator(ctx, validator)
-		counter++
 	}
 
-	iter.Close()
+	if err := iter.Close(); err != nil {
+		return err
+	}
 
 	if _, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx); err != nil {
 		return err

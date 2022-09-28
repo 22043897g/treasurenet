@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	"fmt"
+
 	bytes "github.com/tendermint/tendermint/libs/bytes"
 	client "github.com/tendermint/tendermint/rpc/client"
 
@@ -277,6 +279,7 @@ func (_m *Client) BroadcastTxCommit(_a0 context.Context, _a1 types.Tx) (*coretyp
 
 // BroadcastTxSync provides a mock function with given fields: _a0, _a1
 func (_m *Client) BroadcastTxSync(_a0 context.Context, _a1 types.Tx) (*coretypes.ResultBroadcastTx, error) {
+	fmt.Println("测试广播8")
 	ret := _m.Called(_a0, _a1)
 
 	var r0 *coretypes.ResultBroadcastTx

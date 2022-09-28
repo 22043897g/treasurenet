@@ -5,6 +5,7 @@ type Handler func(ctx Context, msg Msg) (*Result, error)
 
 // AnteHandler authenticates transactions, before their internal messages are handled.
 // If newCtx.IsZero(), ctx is used instead.
+/*在交易中的信息真正执行之前对交易进行有效性检查*/
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)
 
 // AnteDecorator wraps the next AnteHandler to perform custom pre- and post-processing.
