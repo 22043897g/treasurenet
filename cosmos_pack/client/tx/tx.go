@@ -1021,16 +1021,16 @@ func CalculateGas(
 	clientCtx gogogrpc.ClientConn, txf Factory, msgs ...sdk.Msg,
 ) (*tx.SimulateResponse, uint64, error) {
 	txBytes, err := BuildSimTx(txf, msgs...)
-	fmt.Printf("气体估算:%+v\n", txBytes)
+	//fmt.Printf("气体估算:%+v\n", txBytes)
 	if err != nil {
 		return nil, 0, err
 	}
-	fmt.Println("测试777777")
+	//fmt.Println("测试777777")
 	txSvcClient := tx.NewServiceClient(clientCtx)
 	simRes, err := txSvcClient.Simulate(context.Background(), &tx.SimulateRequest{
 		TxBytes: txBytes,
 	})
-	fmt.Printf("gas used:= %+v\n", simRes.GasInfo.GasUsed)
+	//fmt.Printf("gas used:= %+v\n", simRes.GasInfo.GasUsed)
 	if err != nil {
 		return nil, 0, err
 	}

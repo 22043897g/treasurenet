@@ -668,14 +668,14 @@ func NewServiceClient(cc grpc1.ClientConn) ServiceClient {
 
 func (c *serviceClient) Simulate(ctx context.Context, in *SimulateRequest, opts ...grpc.CallOption) (*SimulateResponse, error) {
 	out := new(SimulateResponse)
-	fmt.Printf("out is:%+v\n", out)
-	fmt.Printf("in is:%+v\n", in)
+	//fmt.Printf("out is:%+v\n", out)
+	//fmt.Printf("in is:%+v\n", in)
 	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/Simulate", in, out, opts...)
-	fmt.Println("Simulate 测试")
+	//fmt.Println("Simulate 测试")
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Simulate 测试2")
+	//fmt.Println("Simulate 测试2")
 	return out, nil
 }
 
