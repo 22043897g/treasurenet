@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,9 +37,7 @@ type Response struct {
 	Result json.RawMessage `json:"result,omitempty"`
 }
 
-var (
-	HOST = os.Getenv("HOST")
-)
+var HOST = os.Getenv("HOST")
 
 func GetAddress() ([]byte, error) {
 	rpcRes, err := CallWithError("eth_accounts", []string{})
@@ -63,19 +63,26 @@ func CreateRequest(method string, params interface{}) Request {
 	}
 }
 
-func Call(t *testing.T, method string, params interface{}) *Response {
+func CallWithSleep(t *testing.T, method string, params interface{}, sleep time.Duration) *Response {
 	req, err := json.Marshal(CreateRequest(method, params))
 	require.NoError(t, err)
 
 	var rpcRes *Response
-	time.Sleep(1 * time.Second)
-	/* #nosec */
-
-	if HOST == "" {
-		HOST = "http://localhost:8545"
+	if sleep > 0 {
+		time.Sleep(sleep)
 	}
-	res, err := http.Post(HOST, "application/json", bytes.NewBuffer(req)) //nolint:gosec
-	require.NoError(t, err)
+
+	httpReq, err := http.NewRequestWithContext(context.Background(), "POST", HOST, bytes.NewBuffer(req))
+	if err != nil {
+		require.NoError(t, err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	res, err := client.Do(httpReq)
+	if err != nil {
+		require.NoError(t, errors.Wrap(err, "Could not perform request"))
+	}
 
 	decoder := json.NewDecoder(res.Body)
 	rpcRes = new(Response)
@@ -89,6 +96,10 @@ func Call(t *testing.T, method string, params interface{}) *Response {
 	return rpcRes
 }
 
+func Call(t *testing.T, method string, params interface{}) *Response {
+	return CallWithSleep(t, method, params, time.Second)
+}
+
 func CallWithError(method string, params interface{}) (*Response, error) {
 	req, err := json.Marshal(CreateRequest(method, params))
 	if err != nil {
@@ -97,14 +108,17 @@ func CallWithError(method string, params interface{}) (*Response, error) {
 
 	var rpcRes *Response
 	time.Sleep(1 * time.Second)
-	/* #nosec */
 
-	if HOST == "" {
-		HOST = "http://localhost:8545"
-	}
-	res, err := http.Post(HOST, "application/json", bytes.NewBuffer(req)) //nolint:gosec
+	httpReq, err := http.NewRequestWithContext(context.Background(), "POST", HOST, bytes.NewBuffer(req))
 	if err != nil {
 		return nil, err
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	res, err := client.Do(httpReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "Could not perform request")
 	}
 
 	decoder := json.NewDecoder(res.Body)
@@ -222,7 +236,6 @@ func DeployTestContractWithFunction(t *testing.T, addr []byte) hexutil.Bytes {
 	return hash
 }
 
-//nolint
 func GetTransactionReceipt(t *testing.T, hash hexutil.Bytes) map[string]interface{} {
 	param := []string{hash.String()}
 	rpcRes := Call(t, "eth_getTransactionReceipt", param)
@@ -258,6 +271,15 @@ func GetNonce(t *testing.T, block string) hexutil.Uint64 {
 	err = json.Unmarshal(rpcRes.Result, &nonce)
 	require.NoError(t, err)
 	return nonce
+}
+
+func GetGasPrice(t *testing.T) string {
+	gasRes := Call(t, "eth_gasPrice", []interface{}{})
+
+	var gasPrice string
+	err := json.Unmarshal(gasRes.Result, &gasPrice)
+	require.NoError(t, err)
+	return gasPrice
 }
 
 func UnlockAllAccounts(t *testing.T) {

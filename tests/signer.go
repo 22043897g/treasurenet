@@ -10,13 +10,19 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/treasurenet/crypto/ethsecp256k1"
+	// "github.com/treasurenetprotocol/treasurenet/crypto/ethsecp256k1"
+	"github.com/treasurenetprotocol/treasurenet/crypto/ethsecp256k1"
 )
 
 // NewAddrKey generates an Ethereum address and its corresponding private key.
 func NewAddrKey() (common.Address, cryptotypes.PrivKey) {
 	privkey, _ := ethsecp256k1.GenerateKey()
-	addr := crypto.PubkeyToAddress(privkey.ToECDSA().PublicKey)
+	key, err := privkey.ToECDSA()
+	if err != nil {
+		return common.Address{}, nil
+	}
+
+	addr := crypto.PubkeyToAddress(key.PublicKey)
 
 	return addr, privkey
 }

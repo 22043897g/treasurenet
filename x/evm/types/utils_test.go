@@ -8,29 +8,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/treasurenetprotocol/treasurenet/app"
+	"github.com/treasurenetprotocol/treasurenet/encoding"
+	evmtypes "github.com/treasurenetprotocol/treasurenet/x/evm/types"
 	proto "github.com/gogo/protobuf/proto"
-
-	"github.com/treasurenet/app"
-	"github.com/treasurenet/crypto/ethsecp256k1"
-	"github.com/treasurenet/encoding"
-	evmtypes "github.com/treasurenet/x/evm/types"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/ethereum/go-ethereum/common"
-	ethcmn "github.com/ethereum/go-ethereum/common"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 )
-
-// GenerateEthAddress generates an Ethereum address.
-func GenerateEthAddress() ethcmn.Address {
-	priv, err := ethsecp256k1.GenerateKey()
-	if err != nil {
-		panic(err)
-	}
-
-	return ethcrypto.PubkeyToAddress(priv.ToECDSA().PublicKey)
-}
 
 func TestEvmDataEncoding(t *testing.T) {
 	ret := []byte{0x5, 0x8}
@@ -62,7 +48,7 @@ func TestEvmDataEncoding(t *testing.T) {
 }
 
 func TestUnwrapEthererumMsg(t *testing.T) {
-	_, err := evmtypes.UnwrapEthereumMsg(nil)
+	_, err := evmtypes.UnwrapEthereumMsg(nil, common.Hash{})
 	require.NotNil(t, err)
 
 	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
@@ -70,14 +56,14 @@ func TestUnwrapEthererumMsg(t *testing.T) {
 	builder, _ := clientCtx.TxConfig.NewTxBuilder().(authtx.ExtensionOptionsTxBuilder)
 
 	tx := builder.GetTx().(sdk.Tx)
-	_, err = evmtypes.UnwrapEthereumMsg(&tx)
+	_, err = evmtypes.UnwrapEthereumMsg(&tx, common.Hash{})
 	require.NotNil(t, err)
 
-	msg := evmtypes.NewTx(big.NewInt(1), 0, &common.Address{}, big.NewInt(0), 0, big.NewInt(0), []byte{}, nil)
+	msg := evmtypes.NewTx(big.NewInt(1), 0, &common.Address{}, big.NewInt(0), 0, big.NewInt(0), nil, nil, []byte{}, nil)
 	err = builder.SetMsgs(msg)
 
 	tx = builder.GetTx().(sdk.Tx)
-	msg_, err := evmtypes.UnwrapEthereumMsg(&tx)
+	msg_, err := evmtypes.UnwrapEthereumMsg(&tx, msg.AsTransaction().Hash())
 	require.Nil(t, err)
 	require.Equal(t, msg_, msg)
 }

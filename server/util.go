@@ -1,24 +1,26 @@
 package server
 
 import (
+	"net"
 	"net/http"
 	"time"
 
+	"github.com/treasurenetprotocol/treasurenet/server/config"
 	"github.com/gorilla/mux"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/spf13/cobra"
+	"golang.org/x/net/netutil"
 
 	sdkserver "github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
+	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-
-	"github.com/treasurenet/app"
 )
 
-// add server commands
+// AddCommands adds server commands
 func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
 	tendermintCmd := &cobra.Command{
 		Use:   "tendermint",
@@ -30,6 +32,8 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		sdkserver.ShowValidatorCmd(),
 		sdkserver.ShowAddressCmd(),
 		sdkserver.VersionCmd(),
+		tmcmd.ResetAllCmd,
+		//tmcmd.ResetStateCmd,
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)
@@ -37,10 +41,13 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 
 	rootCmd.AddCommand(
 		startCmd,
-		sdkserver.UnsafeResetAllCmd(),
 		tendermintCmd,
-		sdkserver.ExportCmd(appExport, app.DefaultNodeHome),
+		sdkserver.ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
+		//sdkserver.NewRollbackCmd(defaultNodeHome),
+
+		// custom tx indexer command
+		//NewIndexTxCmd(),
 	)
 }
 
@@ -95,4 +102,20 @@ func MountGRPCWebServices(
 			}
 		})
 	}
+}
+
+// Listen starts a net.Listener on the tcp network on the given address.
+// If there is a specified MaxOpenConnections in the config, it will also set the limitListener.
+func Listen(addr string, config *config.Config) (net.Listener, error) {
+	if addr == "" {
+		addr = ":http"
+	}
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+	if config.JSONRPC.MaxOpenConnections > 0 {
+		ln = netutil.LimitListener(ln, config.JSONRPC.MaxOpenConnections)
+	}
+	return ln, err
 }

@@ -15,7 +15,7 @@ var (
 	regexEIP155          = `[1-9][0-9]*`
 	regexEpochSeparator  = `-{1}`
 	regexEpoch           = `[1-9][0-9]*`
-	treasurenetChainID   = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)%s(%s)$`, regexChainID, regexEIP155Separator, regexEIP155, regexEpochSeparator, regexEpoch))
+	ethermintChainID     = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)%s(%s)$`, regexChainID, regexEIP155Separator, regexEIP155, regexEpochSeparator, regexEpoch))
 )
 
 // IsValidChainID returns false if the given chain identifier is incorrectly formatted.
@@ -24,7 +24,7 @@ func IsValidChainID(chainID string) bool {
 		return false
 	}
 
-	return treasurenetChainID.MatchString(chainID)
+	return ethermintChainID.MatchString(chainID)
 }
 
 // ParseChainID parses a string chain identifier's epoch to an Ethereum-compatible
@@ -35,7 +35,7 @@ func ParseChainID(chainID string) (*big.Int, error) {
 		return nil, sdkerrors.Wrapf(ErrInvalidChainID, "chain-id '%s' cannot exceed 48 chars", chainID)
 	}
 
-	matches := treasurenetChainID.FindStringSubmatch(chainID)
+	matches := ethermintChainID.FindStringSubmatch(chainID)
 	if matches == nil || len(matches) != 4 || matches[1] == "" {
 		return nil, sdkerrors.Wrapf(ErrInvalidChainID, "%s: %v", chainID, matches)
 	}

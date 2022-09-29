@@ -15,23 +15,27 @@ import (
 // All the negative or nil values are converted to nil
 func (cc ChainConfig) EthereumConfig(chainID *big.Int) *params.ChainConfig {
 	return &params.ChainConfig{
-		ChainID:             chainID,
-		HomesteadBlock:      getBlockValue(cc.HomesteadBlock),
-		DAOForkBlock:        getBlockValue(cc.DAOForkBlock),
-		DAOForkSupport:      cc.DAOForkSupport,
-		EIP150Block:         getBlockValue(cc.EIP150Block),
-		EIP150Hash:          common.HexToHash(cc.EIP150Hash),
-		EIP155Block:         getBlockValue(cc.EIP155Block),
-		EIP158Block:         getBlockValue(cc.EIP158Block),
-		ByzantiumBlock:      getBlockValue(cc.ByzantiumBlock),
-		ConstantinopleBlock: getBlockValue(cc.ConstantinopleBlock),
-		PetersburgBlock:     getBlockValue(cc.PetersburgBlock),
-		IstanbulBlock:       getBlockValue(cc.IstanbulBlock),
-		MuirGlacierBlock:    getBlockValue(cc.MuirGlacierBlock),
-		BerlinBlock:         getBlockValue(cc.BerlinBlock),
-		YoloV3Block:         getBlockValue(cc.YoloV3Block),
-		EWASMBlock:          getBlockValue(cc.EWASMBlock),
-		CatalystBlock:       getBlockValue(cc.CatalystBlock),
+		ChainID:                 chainID,
+		HomesteadBlock:          getBlockValue(cc.HomesteadBlock),
+		DAOForkBlock:            getBlockValue(cc.DAOForkBlock),
+		DAOForkSupport:          cc.DAOForkSupport,
+		EIP150Block:             getBlockValue(cc.EIP150Block),
+		EIP150Hash:              common.HexToHash(cc.EIP150Hash),
+		EIP155Block:             getBlockValue(cc.EIP155Block),
+		EIP158Block:             getBlockValue(cc.EIP158Block),
+		ByzantiumBlock:          getBlockValue(cc.ByzantiumBlock),
+		ConstantinopleBlock:     getBlockValue(cc.ConstantinopleBlock),
+		PetersburgBlock:         getBlockValue(cc.PetersburgBlock),
+		IstanbulBlock:           getBlockValue(cc.IstanbulBlock),
+		MuirGlacierBlock:        getBlockValue(cc.MuirGlacierBlock),
+		BerlinBlock:             getBlockValue(cc.BerlinBlock),
+		LondonBlock:             getBlockValue(cc.LondonBlock),
+		ArrowGlacierBlock:       getBlockValue(cc.ArrowGlacierBlock),
+		GrayGlacierBlock:        getBlockValue(cc.GrayGlacierBlock),
+		MergeNetsplitBlock:      getBlockValue(cc.MergeNetsplitBlock),
+		TerminalTotalDifficulty: nil,
+		Ethash:                  nil,
+		Clique:                  nil,
 	}
 }
 
@@ -48,7 +52,10 @@ func DefaultChainConfig() ChainConfig {
 	istanbulBlock := sdk.ZeroInt()
 	muirGlacierBlock := sdk.ZeroInt()
 	berlinBlock := sdk.ZeroInt()
-	yoloV3Block := sdk.ZeroInt()
+	londonBlock := sdk.ZeroInt()
+	arrowGlacierBlock := sdk.ZeroInt()
+	grayGlacierBlock := sdk.ZeroInt()
+	mergeNetsplitBlock := sdk.ZeroInt()
 
 	return ChainConfig{
 		HomesteadBlock:      &homesteadBlock,
@@ -64,9 +71,10 @@ func DefaultChainConfig() ChainConfig {
 		IstanbulBlock:       &istanbulBlock,
 		MuirGlacierBlock:    &muirGlacierBlock,
 		BerlinBlock:         &berlinBlock,
-		YoloV3Block:         &yoloV3Block,
-		EWASMBlock:          nil,
-		CatalystBlock:       nil,
+		LondonBlock:         &londonBlock,
+		ArrowGlacierBlock:   &arrowGlacierBlock,
+		GrayGlacierBlock:    &grayGlacierBlock,
+		MergeNetsplitBlock:  &mergeNetsplitBlock,
 	}
 }
 
@@ -117,22 +125,29 @@ func (cc ChainConfig) Validate() error {
 	if err := validateBlock(cc.BerlinBlock); err != nil {
 		return sdkerrors.Wrap(err, "berlinBlock")
 	}
-	if err := validateBlock(cc.YoloV3Block); err != nil {
-		return sdkerrors.Wrap(err, "yoloV3Block")
+	if err := validateBlock(cc.LondonBlock); err != nil {
+		return sdkerrors.Wrap(err, "londonBlock")
 	}
-	if err := validateBlock(cc.EWASMBlock); err != nil {
-		return sdkerrors.Wrap(err, "eWASMBlock")
+	if err := validateBlock(cc.ArrowGlacierBlock); err != nil {
+		return sdkerrors.Wrap(err, "arrowGlacierBlock")
 	}
-	if err := validateBlock(cc.CatalystBlock); err != nil {
-		return sdkerrors.Wrap(err, "calalystBlock")
+	if err := validateBlock(cc.GrayGlacierBlock); err != nil {
+		return sdkerrors.Wrap(err, "GrayGlacierBlock")
+	}
+	if err := validateBlock(cc.MergeNetsplitBlock); err != nil {
+		return sdkerrors.Wrap(err, "MergeNetsplitBlock")
 	}
 
+	// NOTE: chain ID is not needed to check config order
+	if err := cc.EthereumConfig(nil).CheckConfigForkOrder(); err != nil {
+		return sdkerrors.Wrap(err, "invalid config fork order")
+	}
 	return nil
 }
 
 func validateHash(hex string) error {
 	if hex != "" && strings.TrimSpace(hex) == "" {
-		return sdkerrors.Wrapf(ErrInvalidChainConfig, "hash cannot be blank")
+		return sdkerrors.Wrap(ErrInvalidChainConfig, "hash cannot be blank")
 	}
 
 	return nil
@@ -151,14 +166,4 @@ func validateBlock(block *sdk.Int) error {
 	}
 
 	return nil
-}
-
-// IsIstanbul returns whether the Istanbul version is enabled.
-func (cc ChainConfig) IsIstanbul() bool {
-	return getBlockValue(cc.IstanbulBlock) != nil
-}
-
-// IsHomestead returns whether the Homestead version is enabled.
-func (cc ChainConfig) IsHomestead() bool {
-	return getBlockValue(cc.HomesteadBlock) != nil
 }

@@ -1,4 +1,4 @@
 all:
-	docker build --no-cache --tag treasurenetd/node ../.. -f treasurenetnode/Dockerfile
+	docker build --no-cache --tag ethermintd/node ../.. -f ethermintnode/Dockerfile
 
 .PHONY: all
