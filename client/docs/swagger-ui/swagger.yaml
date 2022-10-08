@@ -6,7 +6,7 @@ info:
 paths:
   /ethermint/evm/v1/account/{address}:
     get:
-      summary: Account queries an Ethereum account.
+      summary: 1、Account queries an Ethereum account.
       operationId: Account
       responses:
         '200':
@@ -227,7 +227,7 @@ paths:
   /ethermint/evm/v1/balances/{address}:
     get:
       summary: |-
-        Balance queries the balance of a the EVM denomination for a single
+        2、Balance queries the balance of a the EVM denomination for a single
         EthAccount.
       operationId: Balance
       responses:
@@ -442,7 +442,7 @@ paths:
   /ethermint/evm/v1/base_fee:
     get:
       summary: >-
-        BaseFee queries the base fee of the parent block of the current block,
+        3、BaseFee queries the base fee of the parent block of the current block,
 
         it's similar to feemarket module's method, but also checks london
         hardfork status.
@@ -649,7 +649,7 @@ paths:
         - Query
   /ethermint/evm/v1/codes/{address}:
     get:
-      summary: Code queries the balance of all coins for a single account.
+      summary: 4、Code queries the balance of all coins for a single account.
       operationId: Code
       responses:
         '200':
@@ -863,7 +863,7 @@ paths:
         - Query
   /ethermint/evm/v1/cosmos_account/{address}:
     get:
-      summary: CosmosAccount queries an Ethereum account's Cosmos Address.
+      summary: 5、CosmosAccount queries an Ethereum account's Cosmos Address.
       operationId: CosmosAccount
       responses:
         '200':
@@ -1086,7 +1086,7 @@ paths:
         - Query
   /ethermint/evm/v1/estimate_gas:
     get:
-      summary: EstimateGas implements the `eth_estimateGas` rpc api
+      summary: 6、EstimateGas implements the `eth_estimateGas` rpc api
       operationId: EstimateGas
       responses:
         '200':
@@ -1305,7 +1305,7 @@ paths:
         - Query
   /ethermint/evm/v1/eth_call:
     get:
-      summary: EthCall implements the `eth_call` rpc api
+      summary: 7、EthCall implements the `eth_call` rpc api
       operationId: EthCall
       responses:
         '200':
@@ -1603,7 +1603,7 @@ paths:
         - Query
   /ethermint/evm/v1/params:
     get:
-      summary: Params queries the parameters of x/evm module.
+      summary: 8、Params queries the parameters of x/evm module.
       operationId: EvmParams
       responses:
         '200':
@@ -1927,7 +1927,7 @@ paths:
         - Query
   /ethermint/evm/v1/storage/{address}/{key}:
     get:
-      summary: Storage queries the balance of all coins for a single account.
+      summary: 9、Storage queries the balance of all coins for a single account.
       operationId: Storage
       responses:
         '200':
@@ -2152,7 +2152,7 @@ paths:
   /ethermint/evm/v1/trace_block:
     get:
       summary: >-
-        TraceBlock implements the `debug_traceBlockByNumber` and
+        10、TraceBlock implements the `debug_traceBlockByNumber` and
         `debug_traceBlockByHash` rpc api
       operationId: TraceBlock
       responses:
@@ -2519,7 +2519,7 @@ paths:
         - Query
   /ethermint/evm/v1/trace_tx:
     get:
-      summary: TraceTx implements the `debug_traceTransaction` rpc api
+      summary: 11、TraceTx implements the `debug_traceTransaction` rpc api
       operationId: TraceTx
       responses:
         '200':
@@ -2966,7 +2966,7 @@ paths:
   /ethermint/evm/v1/validator_account/{cons_address}:
     get:
       summary: >-
-        ValidatorAccount queries an Ethereum account's from a validator
+        12、ValidatorAccount queries an Ethereum account's from a validator
         consensus
 
         Address.
@@ -3192,7 +3192,7 @@ paths:
         - Query
   /cosmos/auth/v1beta1/accounts:
     get:
-      summary: Accounts returns all the existing accounts
+      summary: 13、Accounts returns all the existing accounts
       operationId: Accounts
       responses:
         '200':
@@ -3646,7 +3646,7 @@ paths:
         - Query
   /cosmos/auth/v1beta1/accounts/{address}:
     get:
-      summary: Account returns account details based on address.
+      summary: 14、Account returns account details based on address.
       operationId: AuthAccount
       responses:
         '200':
@@ -4027,7 +4027,7 @@ paths:
         - Query
   /cosmos/auth/v1beta1/params:
     get:
-      summary: Params queries all parameters.
+      summary: 15、Params queries all parameters.
       operationId: AuthParams
       responses:
         '200':
@@ -4250,7 +4250,7 @@ paths:
         - Query
   /cosmos/bank/v1beta1/balances/{address}:
     get:
-      summary: AllBalances queries the balance of all coins for a single account.
+      summary: 16、AllBalances queries the balance of all coins for a single account.
       operationId: AllBalances
       responses:
         '200':
@@ -4384,7 +4384,7 @@ paths:
         - Query
   /cosmos/bank/v1beta1/balances/{address}/{denom}:
     get:
-      summary: Balance queries the balance of a single coin for a single account.
+      summary: 17、Balance queries the balance of a single coin for a single account.
       operationId: BankBalance
       responses:
         '200':
@@ -4448,7 +4448,7 @@ paths:
   /cosmos/bank/v1beta1/denoms_metadata:
     get:
       summary: >-
-        DenomsMetadata queries the client metadata for all registered coin
+        18、DenomsMetadata queries the client metadata for all registered coin
         denominations.
       operationId: DenomsMetadata
       responses:
@@ -4632,7 +4632,7 @@ paths:
         - Query
   /cosmos/bank/v1beta1/denoms_metadata/{denom}:
     get:
-      summary: DenomsMetadata queries the client metadata of a given coin denomination.
+      summary: 19、DenomsMetadata queries the client metadata of a given coin denomination.
       operationId: DenomMetadata
       responses:
         '200':
@@ -4744,7 +4744,7 @@ paths:
         - Query
   /cosmos/bank/v1beta1/params:
     get:
-      summary: Params queries the parameters of x/bank module.
+      summary: 20、Params queries the parameters of x/bank module.
       operationId: BankParams
       responses:
         '200':
@@ -4801,7 +4801,7 @@ paths:
         - Query
   /cosmos/bank/v1beta1/supply:
     get:
-      summary: TotalSupply queries the total supply of all coins.
+      summary: 21、TotalSupply queries the total supply of all coins.
       operationId: TotalSupply
       responses:
         '200':
@@ -4930,7 +4930,7 @@ paths:
         - Query
   /cosmos/bank/v1beta1/supply/{denom}:
     get:
-      summary: SupplyOf queries the supply of a single coin.
+      summary: 22、SupplyOf queries the supply of a single coin.
       operationId: SupplyOf
       responses:
         '200':
@@ -4988,7 +4988,7 @@ paths:
         - Query
   /cosmos/distribution/v1beta1/community_pool:
     get:
-      summary: CommunityPool queries the community pool coins.
+      summary: 23、CommunityPool queries the community pool coins.
       operationId: CommunityPool
       responses:
         '200':
@@ -5047,7 +5047,7 @@ paths:
   /cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards:
     get:
       summary: |-
-        DelegationTotalRewards queries the total rewards accrued by a each
+        24、DelegationTotalRewards queries the total rewards accrued by a each
         validator.
       operationId: DelegationTotalRewards
       responses:
@@ -5139,7 +5139,7 @@ paths:
         - Query
   /cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}:
     get:
-      summary: DelegationRewards queries the total rewards accrued by a delegation.
+      summary: 25、DelegationRewards queries the total rewards accrued by a delegation.
       operationId: DelegationRewards
       responses:
         '200':
@@ -5206,7 +5206,7 @@ paths:
         - Query
   /cosmos/distribution/v1beta1/delegators/{delegator_address}/validators:
     get:
-      summary: DelegatorValidators queries the validators of a delegator.
+      summary: 26、DelegatorValidators queries the validators of a delegator.
       operationId: DistDelegatorValidators
       responses:
         '200':
@@ -5256,7 +5256,7 @@ paths:
         - Query
   /cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address:
     get:
-      summary: DelegatorWithdrawAddress queries withdraw address of a delegator.
+      summary: 27、DelegatorWithdrawAddress queries withdraw address of a delegator.
       operationId: DelegatorWithdrawAddress
       responses:
         '200':
@@ -5302,7 +5302,7 @@ paths:
         - Query
   /cosmos/distribution/v1beta1/params:
     get:
-      summary: Params queries params of the distribution module.
+      summary: 28、Params queries params of the distribution module.
       operationId: DistributionParams
       responses:
         '200':
@@ -5351,7 +5351,7 @@ paths:
         - Query
   /cosmos/distribution/v1beta1/validators/{validator_address}/commission:
     get:
-      summary: ValidatorCommission queries accumulated commission for a validator.
+      summary: 29、ValidatorCommission queries accumulated commission for a validator.
       operationId: ValidatorCommission
       responses:
         '200':
@@ -5416,7 +5416,7 @@ paths:
         - Query
   /cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards:
     get:
-      summary: ValidatorOutstandingRewards queries rewards of a validator address.
+      summary: 30、ValidatorOutstandingRewards queries rewards of a validator address.
       operationId: ValidatorOutstandingRewards
       responses:
         '200':
@@ -5488,7 +5488,7 @@ paths:
         - Query
   /cosmos/distribution/v1beta1/validators/{validator_address}/slashes:
     get:
-      summary: ValidatorSlashes queries slash events of a validator.
+      summary: 31、ValidatorSlashes queries slash events of a validator.
       operationId: ValidatorSlashes
       responses:
         '200':
@@ -5639,7 +5639,7 @@ paths:
         - Query
   /cosmos/mint/v1beta1/annual_provisions:
     get:
-      summary: AnnualProvisions current minting annual provisions value.
+      summary: 32、AnnualProvisions current minting annual provisions value.
       operationId: AnnualProvisions
       responses:
         '200':
@@ -5682,7 +5682,7 @@ paths:
         - Query
   /cosmos/mint/v1beta1/inflation:
     get:
-      summary: Inflation returns the current minting inflation value.
+      summary: 33、Inflation returns the current minting inflation value.
       operationId: Inflation
       responses:
         '200':
@@ -5725,7 +5725,7 @@ paths:
         - Query
   /cosmos/mint/v1beta1/params:
     get:
-      summary: Params returns the total set of minting parameters.
+      summary: 34、Params returns the total set of minting parameters.
       operationId: MintParams
       responses:
         '200':
@@ -5785,7 +5785,7 @@ paths:
         - Query
   /cosmos/gov/v1beta1/params/{params_type}:
     get:
-      summary: Params queries all parameters of the gov module.
+      summary: 35、Params queries all parameters of the gov module.
       operationId: GovParams
       responses:
         '200':
@@ -6058,7 +6058,7 @@ paths:
         - Query
   /cosmos/gov/v1beta1/proposals:
     get:
-      summary: Proposals queries all proposals based on given status.
+      summary: 36、Proposals queries all proposals based on given status.
       operationId: Proposals
       responses:
         '200':
@@ -6629,7 +6629,7 @@ paths:
         - Query
   /cosmos/gov/v1beta1/proposals/{proposal_id}:
     get:
-      summary: Proposal queries proposal details based on ProposalID.
+      summary: 37、Proposal queries proposal details based on ProposalID.
       operationId: Proposal
       responses:
         '200':
@@ -7092,7 +7092,7 @@ paths:
         - Query
   /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits:
     get:
-      summary: Deposits queries all deposits of a single proposal.
+      summary: 38、Deposits queries all deposits of a single proposal.
       operationId: Deposits
       responses:
         '200':
@@ -7408,7 +7408,7 @@ paths:
   /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}:
     get:
       summary: >-
-        Deposit queries single deposit information based proposalID,
+        39、Deposit queries single deposit information based proposalID,
         depositAddr.
       operationId: Deposit
       responses:
@@ -7655,7 +7655,7 @@ paths:
         - Query
   /cosmos/gov/v1beta1/proposals/{proposal_id}/tally:
     get:
-      summary: TallyResult queries the tally of a proposal vote.
+      summary: 40、TallyResult queries the tally of a proposal vote.
       operationId: TallyResult
       responses:
         '200':
@@ -7880,7 +7880,7 @@ paths:
         - Query
   /cosmos/gov/v1beta1/proposals/{proposal_id}/votes:
     get:
-      summary: Votes queries votes of a given proposal.
+      summary: 41、Votes queries votes of a given proposal.
       operationId: Votes
       responses:
         '200':
@@ -8224,7 +8224,7 @@ paths:
         - Query
   /cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}:
     get:
-      summary: Vote queries voted information based on proposalID, voterAddr.
+      summary: 42、Vote queries voted information based on proposalID, voterAddr.
       operationId: Vote
       responses:
         '200':
@@ -8500,7 +8500,7 @@ paths:
   /cosmos/staking/v1beta1/delegations/{delegator_addr}:
     get:
       summary: >-
-        DelegatorDelegations queries all delegations of a given delegator
+        43、DelegatorDelegations queries all delegations of a given delegator
         address.
       operationId: DelegatorDelegations
       responses:
@@ -8835,7 +8835,7 @@ paths:
         - Query
   /cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations:
     get:
-      summary: Redelegations queries redelegations of given address.
+      summary: 44、Redelegations queries redelegations of given address.
       operationId: Redelegations
       responses:
         '200':
@@ -9242,7 +9242,7 @@ paths:
   /cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations:
     get:
       summary: >-
-        DelegatorUnbondingDelegations queries all unbonding delegations of a
+        45、DelegatorUnbondingDelegations queries all unbonding delegations of a
         given
 
         delegator address.
@@ -9580,7 +9580,7 @@ paths:
   /cosmos/staking/v1beta1/delegators/{delegator_addr}/validators:
     get:
       summary: |-
-        DelegatorValidators queries all validators info for given delegator
+        46、DelegatorValidators queries all validators info for given delegator
         address.
       operationId: DelegatorValidators
       responses:
@@ -10176,7 +10176,7 @@ paths:
   /cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}:
     get:
       summary: |-
-        DelegatorValidator queries validator info for given delegator validator
+        47、DelegatorValidator queries validator info for given delegator validator
         pair.
       operationId: DelegatorValidator
       responses:
@@ -10699,7 +10699,7 @@ paths:
         - Query
   /cosmos/staking/v1beta1/historical_info/{height}:
     get:
-      summary: HistoricalInfo queries the historical info for given height.
+      summary: 48、HistoricalInfo queries the historical info for given height.
       operationId: HistoricalInfo
       responses:
         '200':
@@ -11307,7 +11307,7 @@ paths:
         - Query
   /cosmos/staking/v1beta1/params:
     get:
-      summary: Parameters queries the staking parameters.
+      summary: 49、Parameters queries the staking parameters.
       operationId: StakingParams
       responses:
         '200':
@@ -11537,7 +11537,7 @@ paths:
         - Query
   /cosmos/staking/v1beta1/pool:
     get:
-      summary: Pool queries the pool info.
+      summary: 50、Pool queries the pool info.
       operationId: Pool
       responses:
         '200':
@@ -11747,7 +11747,7 @@ paths:
         - Query
   /cosmos/staking/v1beta1/validators:
     get:
-      summary: Validators queries all validators that match the given status.
+      summary: 51、Validators queries all validators that match the given status.
       operationId: Validators
       responses:
         '200':
@@ -12341,7 +12341,7 @@ paths:
         - Query
   /cosmos/staking/v1beta1/validators/{validator_addr}:
     get:
-      summary: Validator queries validator info for given validator address.
+      summary: 52、Validator queries validator info for given validator address.
       operationId: Validator
       responses:
         '200':
@@ -12858,7 +12858,7 @@ paths:
         - Query
   /cosmos/staking/v1beta1/validators/{validator_addr}/delegations:
     get:
-      summary: ValidatorDelegations queries delegate info for given validator.
+      summary: 53、ValidatorDelegations queries delegate info for given validator.
       operationId: ValidatorDelegations
       responses:
         '200':
@@ -13189,7 +13189,7 @@ paths:
         - Query
   /cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}:
     get:
-      summary: Delegation queries delegate info for given validator delegator pair.
+      summary: 54、Delegation queries delegate info for given validator delegator pair.
       operationId: Delegation
       responses:
         '200':
@@ -13453,7 +13453,7 @@ paths:
   /cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation:
     get:
       summary: |-
-        UnbondingDelegation queries unbonding info for given validator delegator
+        55、UnbondingDelegation queries unbonding info for given validator delegator
         pair.
       operationId: UnbondingDelegation
       responses:
@@ -13719,7 +13719,7 @@ paths:
   /cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations:
     get:
       summary: >-
-        ValidatorUnbondingDelegations queries unbonding delegations of a
+        56、ValidatorUnbondingDelegations queries unbonding delegations of a
         validator.
       operationId: ValidatorUnbondingDelegations
       responses:
@@ -14062,7 +14062,7 @@ paths:
         x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     get:
       deprecated: true
-      summary: Get all delegations from a delegator
+      summary: 57、Get all delegations from a delegator
       tags:
         - Staking
       produces:
@@ -14233,7 +14233,7 @@ paths:
         type: string
         x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     post:
-      summary: Submit getpubkey
+      summary: 58、Submit getpubkey
       parameters:
         - in: body
           name: getpubkey
