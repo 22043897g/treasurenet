@@ -213,10 +213,14 @@ func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 // packs the provided value in an Any and then marshals it to bytes.
 // NOTE: to marshal a concrete type, you should use MarshalJSON instead
 func (pc *ProtoCodec) MarshalInterfaceJSON(x proto.Message) ([]byte, error) {
+	//fmt.Printf("x:=%+v\n", x)
 	any, err := types.NewAnyWithValue(x)
+	//fmt.Printf("any:=%+v\n", any)
+	//fmt.Println("测试序列化")
 	if err != nil {
 		return nil, err
 	}
+	//fmt.Println("测试序列化2")
 	return pc.MarshalJSON(any)
 }
 

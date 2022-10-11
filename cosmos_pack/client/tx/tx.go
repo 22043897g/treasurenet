@@ -14,8 +14,8 @@ import (
 	"github.com/spf13/pflag"
 
 	//"github.com/treasurenet/crypto/ethsecp256k1"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	//"github.com/treasurenetprotocol/treasurenet/crypto/ethsecp256k1"
+	//"github.com/evmos/ethermint/crypto/ethsecp256k1"
+	"github.com/treasurenetprotocol/treasurenet/crypto/ethsecp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -217,6 +217,7 @@ func WritePubkeyTxResponse(
 	fmt.Printf("PubKey_Hex=%+v\n", PubKey_Hex)
 	pubB := &ethsecp256k1.PubKey{Key: tmpKey}
 	//pubB := &secp256k1.PubKey{Key: tmpKey}
+	fmt.Printf("pubB=%+v\n", pubB)
 	fmt.Printf("pubB_address:=%+v\n", pubB.Address())
 	NewAddress, _ := sdk.AccAddressFromHex(pubB.Address().String())
 	address := NewAddress.String()
@@ -235,9 +236,14 @@ func WritePubkeyTxResponse(
 		fmt.Printf("PubKey_Hex=%+v\n", PubKey_Hex2)
 		pubB = &ethsecp256k1.PubKey{Key: tmpKey2}
 		//pubB = &secp256k1.PubKey{Key: tmpKey2}
+		// NewAddress, _ := sdk.AccAddressFromHex(pubB.Address().String())
+		// address := NewAddress.String()
+		// //address, _ := sdk.AccAddressFromBech32(pubB.Address())
+		// fmt.Printf("address is :%+v\n", address)
 	}
 	ptr, _ := clientCtx.Codec.MarshalInterfaceJSON(pubB)
 	fmt.Println("ptr=\n", ptr)
+	//fmt.Println("ptr2=\n", pubB.GetKey())
 	var pk cryptotypes.PubKey
 	_ = clientCtx.Codec.UnmarshalInterfaceJSON(ptr, &pk)
 	fmt.Println("pk=\n", pk)
