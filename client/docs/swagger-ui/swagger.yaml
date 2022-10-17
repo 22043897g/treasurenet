@@ -12337,7 +12337,7 @@ paths:
           in: query
           required: false
           type: boolean
-      examplle:
+        - name: example 
           description: >-
             Pagination query requires the parameter pagination Limit and pagination Offset is used together. 
 
