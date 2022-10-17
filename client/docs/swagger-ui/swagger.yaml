@@ -12337,6 +12337,15 @@ paths:
           in: query
           required: false
           type: boolean
+      examplle:
+          description: >-
+            Pagination query requires the parameter pagination Limit and pagination Offset is used together. 
+
+            Egg: query 100 records, starting from the 0: pagination. limit=100&pagination Offset=0 
+            
+            Query the second page parameter pagination. 
+            
+            limit=100&pagination offset=100 pagination. The maximum limit parameter is 100
       tags:
         - Query
   /cosmos/staking/v1beta1/validators/{validator_addr}:
