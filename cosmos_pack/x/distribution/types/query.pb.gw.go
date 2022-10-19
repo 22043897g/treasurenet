@@ -80,24 +80,6 @@ func request_Query_ValidatorAllOutstandingRewards_0(ctx context.Context, marshal
 	var protoReq QueryValidatorOutstandingRewardsRequest
 	var metadata runtime.ServerMetadata
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["validator_address"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_address")
-	}
-
-	protoReq.ValidatorAddress, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_address", err)
-	}
-
 	msg, err := client.ValidatorAllOutstandingRewards(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -133,24 +115,6 @@ func local_request_Query_ValidatorOutstandingRewards_0(ctx context.Context, mars
 func local_request_Query_ValidatorAllOutstandingRewards_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryValidatorOutstandingRewardsRequest
 	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["validator_address"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_address")
-	}
-
-	protoReq.ValidatorAddress, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_address", err)
-	}
 
 	msg, err := server.ValidatorAllOutstandingRewards(ctx, &protoReq)
 	return msg, metadata, err
@@ -994,7 +958,7 @@ var (
 
 	pattern_Query_ValidatorOutstandingRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "distribution", "v1beta1", "validators", "validator_address", "outstanding_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ValidatorAllOutstandingRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "distribution", "v1beta1", "validators", "validator_address", "alloutstanding_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ValidatorAllOutstandingRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "distribution", "v1beta1", "alloutstanding_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_ValidatorCommission_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "distribution", "v1beta1", "validators", "validator_address", "commission"}, "", runtime.AssumeColonVerbOpt(false)))
 

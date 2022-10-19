@@ -26,8 +26,7 @@ service Query {
   // ValidatorAllOutstandingRewards queries all rewards.
   rpc ValidatorAllOutstandingRewards(QueryValidatorOutstandingRewardsRequest)
       returns (QueryValidatorOutstandingRewardsResponse) {
-    option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/"
-                                   "{validator_address}/alloutstanding_rewards";
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/alloutstanding_rewards";
   }
 
   // ValidatorCommission queries accumulated commission for a validator.
