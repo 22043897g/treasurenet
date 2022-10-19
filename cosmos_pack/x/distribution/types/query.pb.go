@@ -1213,7 +1213,7 @@ func (*UnimplementedQueryServer) ValidatorOutstandingRewards(ctx context.Context
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatorOutstandingRewards not implemented")
 }
 func (*UnimplementedQueryServer) ValidatorAllOutstandingRewards(ctx context.Context, req *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ValidatorOutstandingRewards not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method ValidatorAllOutstandingRewards not implemented")
 }
 func (*UnimplementedQueryServer) ValidatorCommission(ctx context.Context, req *QueryValidatorCommissionRequest) (*QueryValidatorCommissionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatorCommission not implemented")
