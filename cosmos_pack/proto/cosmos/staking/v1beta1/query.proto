@@ -50,6 +50,10 @@ service Query {
     option (google.api.http).get = "/cosmos/staking/v1beta1/delegations/{delegator_addr}";
   }
 
+  // DelegatorTotalDelegations queries all delegations of a given delegator address.
+  rpc DelegatorTotalDelegations(QueryDelegatorDelegationsRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/cosmos/staking/v1beta1/delegationstotal/{delegator_addr}";
+  }
   // DelegatorUnbondingDelegations queries all unbonding delegations of a given
   // delegator address.
   rpc DelegatorUnbondingDelegations(QueryDelegatorUnbondingDelegationsRequest)

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -287,6 +288,57 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 	}
 
 	return &types.QueryDelegatorDelegationsResponse{DelegationResponses: delegationResps, Pagination: pageRes}, nil
+
+}
+
+//Total staking delegation
+func (k Querier) DelegatorTotalDelegations(c context.Context, req *types.QueryDelegatorDelegationsRequest) (*types.QueryPoolResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.DelegatorAddr == "" {
+		return nil, status.Error(codes.InvalidArgument, "delegator address cannot be empty")
+	}
+	var delegations types.Delegations
+	ctx := sdk.UnwrapSDKContext(c)
+	balances := sdk.NewCoin(k.BondDenom(ctx), sdk.ZeroInt())
+	// var newAmount sdk.Int
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
+	_, err = query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
+		delegation, err := types.UnmarshalDelegation(k.cdc, value)
+		if err != nil {
+			return err
+		}
+		delegations = append(delegations, delegation)
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	delegationResps, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	for _, value := range delegationResps {
+		fmt.Printf("value.Balance:%+v", value.Balance)
+		balances = balances.Add(value.Balance)
+	}
+
+	pool := types.NewPool(
+		sdk.ZeroInt(),
+		balances.Amount,
+	)
+
+	return &types.QueryPoolResponse{Pool: pool}, nil
 
 }
 

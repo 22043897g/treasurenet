@@ -7,8 +7,8 @@ TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::'
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
-ETHERMINT_BINARY = ethermintd
-ETHERMINT_DIR = ethermint
+ETHERMINT_BINARY = treasurenetd
+ETHERMINT_DIR = treasurenet
 BUILDDIR ?= $(CURDIR)/build
 SIMAPP = ./app
 HTTPS_GIT := https://github.com/evmos/ethermint.git
@@ -62,7 +62,7 @@ build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 # process linker flags
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=ethermint \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=treasurenet \
 		  -X github.com/cosmos/cosmos-sdk/version.AppName=$(ETHERMINT_BINARY) \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
@@ -125,12 +125,12 @@ docker-build:
 	docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
 	# docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:${COMMIT_HASH}
 	# update old container
-	docker rm ethermint || true
+	docker rm treasurenet || true
 	# create a new container from the latest image
-	docker create --name ethermint -t -i tharsis/ethermint:latest ethermint
+	docker create --name treasurenet -t -i treasurenet:latest treasurenet
 	# move the binaries to the ./build directory
 	mkdir -p ./build/
-	docker cp ethermint:/usr/bin/ethermintd ./build/
+	docker cp treasurenet:/usr/bin/treasurenetd ./build/
 
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
@@ -497,13 +497,13 @@ ifeq ($(OS),Windows_NT)
 	mkdir localnet-setup &
 	@$(MAKE) localnet-build
 
-	IF not exist "build/node0/$(ETHERMINT_BINARY)/config/genesis.json" docker run --rm -v $(CURDIR)/build\ethermint\Z ethermintd/node "./ethermintd testnet --v 4 -o /ethermint --keyring-backend=test --ip-addresses ethermintdnode0,ethermintdnode1,ethermintdnode2,ethermintdnode3"
+	IF not exist "build/node0/$(ETHERMINT_BINARY)/config/genesis.json" docker run --rm -v $(CURDIR)/build\treasurenet\Z treasurenetd/node "./treasurenetd testnet --v 4 -o /treasurenet --keyring-backend=test --ip-addresses treasurenetdnode0,treasurenetdnode1,treasurenetdnode2,treasurenetdnode3"
 	docker-compose up -d
 else
 	mkdir -p localnet-setup
 	@$(MAKE) localnet-build
 
-	if ! [ -f localnet-setup/node0/$(ETHERMINT_BINARY)/config/genesis.json ]; then docker run --rm -v $(CURDIR)/localnet-setup:/ethermint:Z ethermintd/node "./ethermintd testnet --v 4 -o /ethermint --keyring-backend=test --ip-addresses ethermintdnode0,ethermintdnode1,ethermintdnode2,ethermintdnode3"; fi
+	if ! [ -f localnet-setup/node0/$(ETHERMINT_BINARY)/config/genesis.json ]; then docker run --rm -v $(CURDIR)/localnet-setup:/treasurenet:Z treasurenetd/node "./treasurenetd testnet --v 4 -o /treasurenet --keyring-backend=test --ip-addresses treasurenetdnode0,treasurenetdnode1,treasurenetdnode2,treasurenetdnode3"; fi
 	docker-compose up -d
 endif
 
@@ -520,19 +520,19 @@ localnet-clean:
 localnet-unsafe-reset:
 	docker-compose down
 ifeq ($(OS),Windows_NT)
-	@docker run --rm -v $(CURDIR)\localnet-setup\node0\ethermitd:ethermint\Z ethermintd/node "./ethermintd unsafe-reset-all --home=/ethermint"
-	@docker run --rm -v $(CURDIR)\localnet-setup\node1\ethermitd:ethermint\Z ethermintd/node "./ethermintd unsafe-reset-all --home=/ethermint"
-	@docker run --rm -v $(CURDIR)\localnet-setup\node2\ethermitd:ethermint\Z ethermintd/node "./ethermintd unsafe-reset-all --home=/ethermint"
-	@docker run --rm -v $(CURDIR)\localnet-setup\node3\ethermitd:ethermint\Z ethermintd/node "./ethermintd unsafe-reset-all --home=/ethermint"
+	@docker run --rm -v $(CURDIR)\localnet-setup\node0\ethermitd:treasurenet\Z treasurenetd/node "./treasurenetd unsafe-reset-all --home=/treasurenet"
+	@docker run --rm -v $(CURDIR)\localnet-setup\node1\ethermitd:treasurenet\Z treasurenetd/node "./treasurenetd unsafe-reset-all --home=/treasurenet"
+	@docker run --rm -v $(CURDIR)\localnet-setup\node2\ethermitd:treasurenet\Z treasurenetd/node "./treasurenetd unsafe-reset-all --home=/treasurenet"
+	@docker run --rm -v $(CURDIR)\localnet-setup\node3\ethermitd:treasurenet\Z treasurenetd/node "./treasurenetd unsafe-reset-all --home=/treasurenet"
 else
-	@docker run --rm -v $(CURDIR)/localnet-setup/node0/ethermitd:/ethermint:Z ethermintd/node "./ethermintd unsafe-reset-all --home=/ethermint"
-	@docker run --rm -v $(CURDIR)/localnet-setup/node1/ethermitd:/ethermint:Z ethermintd/node "./ethermintd unsafe-reset-all --home=/ethermint"
-	@docker run --rm -v $(CURDIR)/localnet-setup/node2/ethermitd:/ethermint:Z ethermintd/node "./ethermintd unsafe-reset-all --home=/ethermint"
-	@docker run --rm -v $(CURDIR)/localnet-setup/node3/ethermitd:/ethermint:Z ethermintd/node "./ethermintd unsafe-reset-all --home=/ethermint"
+	@docker run --rm -v $(CURDIR)/localnet-setup/node0/ethermitd:/treasurenet:Z treasurenetd/node "./treasurenetd unsafe-reset-all --home=/treasurenet"
+	@docker run --rm -v $(CURDIR)/localnet-setup/node1/ethermitd:/treasurenet:Z treasurenetd/node "./treasurenetd unsafe-reset-all --home=/treasurenet"
+	@docker run --rm -v $(CURDIR)/localnet-setup/node2/ethermitd:/treasurenet:Z treasurenetd/node "./treasurenetd unsafe-reset-all --home=/treasurenet"
+	@docker run --rm -v $(CURDIR)/localnet-setup/node3/ethermitd:/treasurenet:Z treasurenetd/node "./treasurenetd unsafe-reset-all --home=/treasurenet"
 endif
 
 # Clean testnet
 localnet-show-logstream:
 	docker-compose logs --tail=1000 -f
 
-.PHONY: build-docker-local-ethermint localnet-start localnet-stop
+.PHONY: build-docker-local-treasurenet localnet-start localnet-stop
