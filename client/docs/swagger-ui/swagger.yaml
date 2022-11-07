@@ -8904,7 +8904,7 @@ paths:
       summary: >-
         44-1、DelegatorDelegationsTotal queries all delegations of a given delegator
         address.
-      operationId: DelegatorDelegations
+      operationId: DelegatorTotalDelegations
       responses:
         '200':
           description: A successful response.
