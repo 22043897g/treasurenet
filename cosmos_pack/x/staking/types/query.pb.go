@@ -2098,7 +2098,7 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		},
 		{
 			MethodName: "DelegatorTotalDelegations",
-			Handler:    _Query_DelegatorDelegations_Handler,
+			Handler:    _Query_DelegatorTotalDelegations_Handler,
 		},
 		{
 			MethodName: "DelegatorUnbondingDelegations",

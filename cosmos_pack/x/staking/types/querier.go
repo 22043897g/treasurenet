@@ -9,6 +9,7 @@ const (
 	QueryValidators                    = "validators"
 	QueryValidator                     = "validator"
 	QueryDelegatorDelegations          = "delegatorDelegations"
+	QueryDelegatorTotalDelegations     = "delegatorTotalDelegations"
 	QueryDelegatorUnbondingDelegations = "delegatorUnbondingDelegations"
 	QueryRedelegations                 = "redelegations"
 	QueryValidatorDelegations          = "validatorDelegations"
