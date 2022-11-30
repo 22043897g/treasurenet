@@ -147,7 +147,7 @@ const PubKeySize = 33
 
 // Address returns a Bitcoin style addresses: RIPEMD160(SHA256(pubkey))
 func (pubKey *PubKey) Address() crypto.Address {
-	fmt.Printf("pubkey address len is:%+v\n", len(pubKey.Key))
+	//fmt.Printf("pubkey address len is:%+v\n", len(pubKey.Key))
 	if len(pubKey.Key) != PubKeySize {
 		panic("length of pubkey is incorrect")
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -23,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
@@ -96,7 +98,32 @@ func RandomGenesisAccounts(simState *module.SimulationState) authtypes.GenesisAc
 			BaseAccount: bacc,
 			CodeHash:    common.BytesToHash(emptyCodeHash).String(),
 		}
-		genesisAccs[i] = ethacc
+		// Only consider making a vesting account once the initial bonded validator
+		// set is exhausted due to needing to track DelegatedVesting.
+		if !(int64(i) > simState.NumBonded && simState.Rand.Intn(100) < 50) {
+			genesisAccs[i] = ethacc
+			continue
+		}
+		initialVesting := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, simState.Rand.Int63n(simState.InitialStake)))
+		var endTime int64
+
+		startTime := simState.GenTimestamp.Unix()
+
+		// Allow for some vesting accounts to vest very quickly while others very slowly.
+		if simState.Rand.Intn(100) < 50 {
+			endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*24*30))))
+		} else {
+			endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*12))))
+		}
+
+		bva := vestingtypes.NewBaseVestingAccount(bacc, initialVesting, endTime)
+
+		if simState.Rand.Intn(100) < 50 {
+			genesisAccs[i] = vestingtypes.NewContinuousVestingAccountRaw(bva, startTime)
+		} else {
+			genesisAccs[i] = vestingtypes.NewDelayedVestingAccountRaw(bva)
+		}
+		//genesisAccs[i] = ethacc
 	}
 
 	return genesisAccs

@@ -21,6 +21,7 @@ require (
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.1
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0
+	github.com/osmosis-labs/bech32-ibc v0.3.0-rc1
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
@@ -119,6 +120,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	//github.com/osmosis-labs/bech32-ibc v0.2.0-rc2
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
@@ -163,6 +165,7 @@ replace (
 	github.com/cosmos/ibc-go/v3 v3.2.0 => ./ibc-go-v3_pack
 	//github.com/cosmos/ibc-go/v3 v3.1.0 => ./ibc-go-v3_pack
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/osmosis-labs/bech32-ibc v0.3.0-rc1 => ./bech32-ibc_pack
 	github.com/tendermint/tendermint v0.34.21 => ./tendermint_pack
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
