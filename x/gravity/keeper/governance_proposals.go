@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/treasurenetprotocol/treasurenet/x/gravity/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/treasurenetprotocol/treasurenet/x/gravity/types"
 )
 
 // this file contains code related to custom governance proposals

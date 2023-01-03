@@ -163,7 +163,6 @@ replace (
 	github.com/cosmos/cosmos-sdk v0.45.8 => ./cosmos_pack
 	github.com/cosmos/iavl v0.19.1 => github.com/cosmos/iavl v0.17.3
 	github.com/cosmos/ibc-go/v3 v3.2.0 => ./ibc-go-v3_pack
-	//github.com/cosmos/ibc-go/v3 v3.1.0 => ./ibc-go-v3_pack
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/osmosis-labs/bech32-ibc v0.3.0-rc1 => ./bech32-ibc_pack
 	github.com/tendermint/tendermint v0.34.21 => ./tendermint_pack

@@ -66,6 +66,7 @@ var xxx_messageInfo_EthAccount proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*EthAccount)(nil), "ethermint.types.v1.EthAccount")
+	//proto.RegisterType((*EthAccount)(nil), "cosmos.auth.v1beta1.BaseAccount")
 }
 
 func init() { proto.RegisterFile("ethermint/types/v1/account.proto", fileDescriptor_4edc057d42a619ef) }

@@ -400,7 +400,7 @@ func NewEthermintApp(
 		app.GetSubspace(gravitytypes.ModuleName),
 		appCodec,
 		&app.BankKeeper,
-		&app.StakingKeeper,
+		&stakingKeeper,
 		&app.SlashingKeeper,
 		&app.DistrKeeper,
 		&app.AccountKeeper,
@@ -420,7 +420,7 @@ func NewEthermintApp(
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.StakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
+		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.GravityKeeper.Hooks()),
 	)
 
 	app.EvmKeeper = evmkeeper.NewKeeper(
