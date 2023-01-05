@@ -456,12 +456,12 @@ func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.AB
 			// fmt.Println("Mine判断:", Mine)
 			// if len(Mine) == 0 {
 			TatIterator := k.ValidatorsNewPowerStoreIterator(ctx)
-			//iterator := k.ValidatorsNewPowerStoreIterator(ctx)
+			// iterator := k.ValidatorsNewPowerStoreIterator(ctx)
 			defer TatIterator.Close()
 			for count := 0; TatIterator.Valid() && count < int(maxValidators); TatIterator.Next() {
 				// everything that is iterated in this loop is becoming or already a
 				// part of the bonded validator set
-				valAddr := sdk.ValAddress(iterator.Value())
+				valAddr := sdk.ValAddress(TatIterator.Value())
 				validator := k.mustGetValidator(ctx, valAddr)
 				if validator.Jailed {
 					panic("should never retrieve a jailed validator from the power store")
@@ -1178,11 +1178,11 @@ func SubtrDemo(listsupervalidator []string, listvalidator []string) []string {
 	return removal
 }
 
-//random number
+// random number
 func MicsSlice(origin []string, count int) []string {
 	tmpOrigin := make([]string, len(origin))
 	copy(tmpOrigin, origin)
-	//一定要seed
+	// 一定要seed
 	rand.Seed(time.Now().Unix())
 	rand.Shuffle(len(tmpOrigin), func(i int, j int) {
 		tmpOrigin[i], tmpOrigin[j] = tmpOrigin[j], tmpOrigin[i]
@@ -1199,12 +1199,12 @@ func MicsSlice(origin []string, count int) []string {
 }
 func (k Keeper) DeleteNewIterator(ctx sdk.Context) {
 	TatIterator := k.ValidatorsNewPowerStoreIterator(ctx)
-	//iterator := k.ValidatorsNewPowerStoreIterator(ctx)
+	// iterator := k.ValidatorsNewPowerStoreIterator(ctx)
 	defer TatIterator.Close()
 	for ; TatIterator.Valid(); TatIterator.Next() {
 		// everything that is iterated in this loop is becoming or already a
 		// part of the bonded validator set
-		//fmt.Printf("iterator.Value:%v\n", iterator.Value())
+		// fmt.Printf("iterator.Value:%v\n", iterator.Value())
 		valAddr := sdk.ValAddress(TatIterator.Value())
 		// fmt.Println("valAddr:", valAddr)
 		validator := k.mustGetValidator(ctx, valAddr)

@@ -452,7 +452,7 @@ func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) sdk.Iterator {
 	return sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 }
 
-//returns an iterator for the current validator newpower store
+// returns an iterator for the current validator newpower store
 func (k Keeper) ValidatorsNewPowerStoreIterator(ctx sdk.Context) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByNewPowerIndexKey)
