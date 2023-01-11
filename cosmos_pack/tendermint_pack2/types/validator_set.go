@@ -172,6 +172,8 @@ func (vals *ValidatorSet) incrementProposerPriority() *Validator {
 	// Decrement the validator with most ProposerPriority.
 	mostest := vals.getValWithMostPriority()
 	// Mind the underflow.
+	// fmt.Printf("mostest.ProposerPriority:%+v\n", mostest.ProposerPriority)
+	// fmt.Printf("vals.TotalVotingPower():%+v\n", vals.TotalVotingPower())
 	mostest.ProposerPriority = safeSubClip(mostest.ProposerPriority, vals.TotalVotingPower())
 
 	return mostest

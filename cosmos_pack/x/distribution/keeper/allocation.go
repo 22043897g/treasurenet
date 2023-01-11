@@ -63,7 +63,7 @@ func (k Keeper) AllocateTokens(
 	// pay previous proposer
 	remaining := feesCollected
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, previousProposer)
-	//fmt.Println("proposerValidator:", proposerValidator)
+	fmt.Println("proposerValidator:", proposerValidator)
 	if proposerValidator != nil {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(

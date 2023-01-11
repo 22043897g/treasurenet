@@ -100,7 +100,6 @@ func CheckSenderBalance(
 			"tx cost (%s) is negative and invalid", cost,
 		)
 	}
-
 	if balance.IsNegative() || balance.BigInt().Cmp(cost) < 0 {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInsufficientFunds,
