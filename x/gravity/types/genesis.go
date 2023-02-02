@@ -142,7 +142,7 @@ func DefaultParams() *Params {
 		ContractSourceHash:           "",
 		BridgeEthereumAddress:        "0x0000000000000000000000000000000000000000",
 		BridgeChainId:                0,
-		SignedValsetsWindow:          10000,
+		SignedValsetsWindow:          2000000,
 		SignedBatchesWindow:          10000,
 		SignedLogicCallsWindow:       10000,
 		TargetBatchTimeout:           43200000,
