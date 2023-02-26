@@ -291,7 +291,7 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 
 }
 
-//Total staking delegation
+// Total staking delegation
 func (k Querier) DelegatorTotalDelegations(c context.Context, req *types.QueryDelegatorDelegationsRequest) (*types.QueryPoolResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")

@@ -318,19 +318,19 @@ func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.AB
 	// var TemporarymaxValidators int
 	// var tat int64
 	// var newunit int64
-	//fmt.Printf("ctx=%+v\n", ctx)
+	// fmt.Printf("ctx=%+v\n", ctx)
 	maxValidators := params.MaxValidators
 	powerReduction := k.PowerReduction(ctx)
 	// powerReduction2 := k.PowerReduction2(ctx)
 	totalPower := sdk.ZeroInt()
 	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdk.ZeroInt(), sdk.ZeroInt()
-	//fmt.Println("powerReduction2:", powerReduction2)
+	// fmt.Println("powerReduction2:", powerReduction2)
 	// Retrieve the last validator set.
 	// The persistent set is updated later in this function.
 	// (see LastValidatorPowerKey).
 	last, err := k.getLastValidatorsByAddr(ctx)
-	//fmt.Println("last:", last)
-	//last, err := k.getLastValidatorsNewByAddr(ctx)
+	// fmt.Println("last:", last)
+	// last, err := k.getLastValidatorsNewByAddr(ctx)
 	fmt.Println("last:", last)
 	if err != nil {
 		return nil, err
@@ -338,7 +338,7 @@ func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.AB
 	/*
 	 * accounts_address  That is, the account address returned from the event log is converted into the corresponding validator_ Addresses, and then replace POS
 	 */
-	//Create valaddress from bech32 string
+	// Create valaddress from bech32 string
 
 	// delegator_address := "eth1ujuwccre5kadumtlcae7dy5z96k2xqyv7lpp0h"
 	// account_address, _ := sdk.AccAddressFromBech32(delegator_address)
@@ -350,12 +350,12 @@ func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.AB
 	// validator_address := sdk.ValAddress(account_address).String()
 	// fmt.Printf("validator_address:%v\n", validator_address)
 
-	//k.SetValidatorByPowerIndex(ctx, validator)
+	// k.SetValidatorByPowerIndex(ctx, validator)
 	// Iterate over validators, highest power to lowest.  Iterative verifier, from highest power to lowest power
 
 	iterator := k.ValidatorsPowerStoreIterator(ctx)
-	//TatIterator := k.ValidatorsNewPowerStoreIteratorValidatorsNewPowerStoreIterator(ctx)
-	//iterator := k.ValidatorsNewPowerStoreIterator(ctx)
+	// TatIterator := k.ValidatorsNewPowerStoreIteratorValidatorsNewPowerStoreIterator(ctx)
+	// iterator := k.ValidatorsNewPowerStoreIterator(ctx)
 	defer iterator.Close()
 	// listsupervalidator, listvalidator := k.CombinedSliceList(ctx, iterator, maxValidators, log)
 	// newselectlist := SelectList(listsupervalidator, listvalidator)
@@ -379,7 +379,7 @@ func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.AB
 			for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 				// everything that is iterated in this loop is becoming or already a
 				// part of the bonded validator set
-				//fmt.Printf("iterator.Value:%v\n", iterator.Value())
+				// fmt.Printf("iterator.Value:%v\n", iterator.Value())
 				valAddr := sdk.ValAddress(iterator.Value())
 				// fmt.Println("valAddr:", valAddr)
 				validator := k.mustGetValidator(ctx, valAddr)
@@ -394,7 +394,7 @@ func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.AB
 				if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
 					break
 				}
-				fmt.Println("测试步骤", 123)
+				// fmt.Println("测试步骤", 123)
 				k.AddNewIterator(ctx, validator)
 				for _, value := range newselectlist {
 					if validatorstring == value {
@@ -414,13 +414,13 @@ func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.AB
 						}
 					}
 				}
-				fmt.Printf("validator:%+v\n", validator)
+				// fmt.Printf("validator:%+v\n", validator)
 				// fetch the old power bytes
 				valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
-				//newvalAddrStr, _ := sdk.ValAddressFromBech32(valAddrStr)
-				//newValidator, _ := k.GetValidator(ctx, newvalAddrStr)
+				// newvalAddrStr, _ := sdk.ValAddressFromBech32(valAddrStr)
+				// newValidator, _ := k.GetValidator(ctx, newvalAddrStr)
 
-				fmt.Println("valAddrStr", valAddrStr)
+				// fmt.Println("valAddrStr", valAddrStr)
 				if err != nil {
 					return nil, err
 				}
@@ -433,8 +433,8 @@ func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.AB
 				k.SetNewUnitPower(ctx, newunitPower, valAddr)
 
 				k.SetNewValidatorByPowerIndex(ctx, validator)
-				//newPower := validator.ConsensusNewPower(powerReduction)
-				//Accumulate tatpower
+				// newPower := validator.ConsensusNewPower(powerReduction)
+				// Accumulate tatpower
 				// contatpower := params.TatTokens
 				// contatpower += newPower2
 				// params.TatTokens = contatpower
@@ -590,8 +590,8 @@ func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.AB
 		}
 	}
 
-	//defer TatIterator.Close()
-	//fmt.Println("iterator:", iterator)
+	// defer TatIterator.Close()
+	// fmt.Println("iterator:", iterator)
 	// for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 	// 	// everything that is iterated in this loop is becoming or already a
 	// 	// part of the bonded validator set
@@ -826,7 +826,7 @@ func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.AB
 	// set total power on lookup index if there are any updates
 	if len(updates) > 0 {
 		k.SetLastTotalPower(ctx, totalPower)
-		//k.SetLastTatTotalPower(ctx, TattotalPower)
+		// k.SetLastTatTotalPower(ctx, TattotalPower)
 	}
 	fmt.Println("updates:", updates)
 	return updates, err
@@ -1053,7 +1053,7 @@ func sortNoLongerBonded(last validatorsByAddr) ([][]byte, error) {
 	return noLongerBonded, nil
 }
 
-//Handle the list of tatvalidator and validator
+// Handle the list of tatvalidator and validator
 func CombinedSlice(iterator sdk.Iterator, maxValidators uint32, validatorsByAddr string) ([]string, []string) {
 	var ListSuperValidator []string
 	var ListValidator []string
@@ -1126,15 +1126,18 @@ func (k Keeper) CombinedSliceList(ctx sdk.Context, iterator sdk.Iterator, maxVal
 }
 func SelectList(listsupervalidator []string, listvalidator []string) []string {
 	var Activelent int
-	newlistsupervalidator := []string{}
-	newlistvalidator := []string{}
-	newvalidator := []string{}
+	var newlistsupervalidator []string
+	var newlistvalidator []string
+	var newvalidator []string
+	// newlistsupervalidator := []string{}
+	// newlistvalidator := []string{}
+	// newvalidator := []string{}
 	listval := SubtrDemo(listsupervalidator, listvalidator)
 	// Unitlen := len(listvalidator) - len(listsupervalidator)
 	if len(listvalidator) >= 200 {
 		Activelent = 100
 	} else if len(listvalidator) >= 8 && len(listvalidator) < 200 {
-		//Divide two int and round down by default
+		// Divide two int and round down by default
 		Activelent = len(listvalidator) / 2
 		fmt.Println("Activelent大于8小于200", Activelent)
 	} else {

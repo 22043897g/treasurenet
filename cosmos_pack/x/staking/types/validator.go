@@ -38,7 +38,7 @@ var (
 var _ ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
-//nolint:interfacer
+// nolint:interfacer
 func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, description Description) (Validator, error) {
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	if err != nil {
@@ -56,13 +56,13 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		UnbondingHeight: int64(0),
 		UnbondingTime:   time.Unix(0, 0).UTC(),
 		Commission:      NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-		//MinSelfDelegation: sdk.OneInt(),
-		//MinSelfDelegation: sdk.NewIntWithDecimal(int64(158), 18),
-		MinSelfDelegation: sdk.TwoInt(),
-		TatTokens:         sdk.ZeroInt(),
-		NewTokens:         sdk.ZeroInt(),
-		TatPower:          sdk.ZeroInt(),
-		NewUnitPower:      sdk.ZeroInt(),
+		// MinSelfDelegation: sdk.OneInt(),
+		MinSelfDelegation: sdk.NewIntWithDecimal(int64(158), 18),
+		// MinSelfDelegation: sdk.TwoInt(),
+		TatTokens:    sdk.ZeroInt(),
+		NewTokens:    sdk.ZeroInt(),
+		TatPower:     sdk.ZeroInt(),
+		NewUnitPower: sdk.ZeroInt(),
 	}, nil
 }
 

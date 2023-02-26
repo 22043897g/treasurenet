@@ -24,8 +24,8 @@ func (k Keeper) AllocateTokens(
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
 	feeCollector := k.authKeeper.GetModuleAccount(ctx, k.feeCollectorName)
-	fmt.Println("feeCollectorName:", k.feeCollectorName)
-	fmt.Println("feeCollector:", feeCollector)
+	// fmt.Println("feeCollectorName:", k.feeCollectorName)
+	// fmt.Println("feeCollector:", feeCollector)
 	feesCollectedInt := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
 	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
 	fmt.Println("第一次feesCollected:", feesCollected)

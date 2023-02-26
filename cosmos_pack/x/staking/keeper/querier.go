@@ -230,7 +230,7 @@ func queryDelegatorTotalDelegations(ctx sdk.Context, req abci.RequestQuery, k Ke
 	}
 
 	for _, value := range delegationResps {
-		//fmt.Printf("value.Balance:%+v", value.Balance)
+		// fmt.Printf("value.Balance:%+v", value.Balance)
 		balances = balances.Add(value.Balance)
 	}
 

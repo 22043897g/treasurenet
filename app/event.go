@@ -48,7 +48,7 @@ func getLogs(Start, End int64) {
 	} else {
 		//eventSignature := []byte("ItemSet(bytes32,bytes32)")
 		//dongqi(address indexed account, uint256 indexed amount, uint256 variety);
-		eventSignature := []byte("bidList(address,uint256)")
+		eventSignature := []byte("bidBurn(address,uint256)")
 		hash := crypto.Keccak256Hash(eventSignature)
 		topic := hash.Hex()
 		fmt.Println("Test get log title new", topic)

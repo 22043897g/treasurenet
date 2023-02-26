@@ -33,7 +33,7 @@ func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validato
 func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.MaxValidators(ctx)
-	//fmt.Println("路径打印 iterator的powerindex的排序")
+	// fmt.Println("路径打印 iterator的powerindex的排序")
 	iterator := sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 	defer iterator.Close()
 
@@ -41,7 +41,7 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(index in
 	for ; iterator.Valid() && i < int64(maxValidators); iterator.Next() {
 		address := iterator.Value()
 		validator := k.mustGetValidator(ctx, address)
-		//fmt.Println("iterator_validator", validator)
+		// fmt.Println("iterator_validator", validator)
 		if validator.IsBonded() {
 			stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
 			if stop {

@@ -19,6 +19,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	params := k.GetParams(ctx)
 	// recalculate inflation rate
 	totalStakingSupply := k.StakingTokenSupply(ctx)
+	//fmt.Printf("totalStakingSupply = %+v\n", totalStakingSupply)
 	//gasUsed := ctx.BlockGasMeter().GasConsumed()
 	//mainGasUsed := ctx.GasMeter().GasConsumed()
 	bondedRatio := k.BondedRatio(ctx)
@@ -38,27 +39,32 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	//Unit reward
 	AccumulateTat := params.PerReward
 	fmt.Printf("AccumulateTat:%+v\n", AccumulateTat)
-	NewAcc := sdk.NewInt(AccumulateTat)
+	// NewAcc := params.PerReward
+	NewAcc, _ := sdk.NewIntFromString(AccumulateTat)
+
+	// fmt.Printf("AccumulateTat:%+v\n", NewAcc.String())
+	// NewAcc := sdk.NewInt(AccumulateTat)
 	// fmt.Println("NewAcc:", NewAcc)
-	//NewAccumulateTat := int(float32(AccumulateTat) * params.Probability)
-	//fmt.Println(reflect.TypeOf(params.Probability))
+	// NewAccumulateTat := int(float32(AccumulateTat) * params.Probability)
+	// fmt.Println(reflect.TypeOf(params.Probability))
 	fmt.Printf("Probability = %+v\n", params.Probability)
-	//Probability := sdk.NewDecWithPrec(1, 2)
-	//NewAccumulateTat := float32(AccumulateTat) * Probability
-	//fmt.Println("NewAccumulateTat:", NewAccumulateTat)
+	// Probability := sdk.NewDecWithPrec(1, 2)
+	// NewAccumulateTat := float32(AccumulateTat) * Probability
+	// fmt.Println("NewAccumulateTat:", NewAccumulateTat)
 	fmt.Println("bondedRatio:", bondedRatio)                                          //Bondedratio current asset mortgage ratio in the chain
 	minter.TatProbability = minter.NextProbabilityRate(params)                        //Tatprobability indicates the proportion of Tat
 	minter.Inflation = minter.NextInflationRate(params, bondedRatio)                  //The inflation field represents the annual inflation rate of the current block
 	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalStakingSupply) //AnnualProvisions It refers to the number of newly cast assets on the chain each year under the current annual inflation rate calculated according to the applicable annual inflation rate of the current block and the total amount of assets on the chain
+
 	NewAccumulateTat := minter.NewNextAnnualProvisions(params, NewAcc)
 	minter.NewAnnualProvisions = NewAccumulateTat
-
-	//newann := NewAccumulateTat.TruncateInt64() - UnitGrant
-	//fmt.Println("newann:", newann)
-	//minter.NewAnnualProvisions = sdk.NewDec(AccumulateTat)
-	fmt.Printf("NewAccumulateTat = %+v\n", NewAccumulateTat)
-	//NewTwoNumber := 365 * 2 * AfterWeek
-	//fmt.Println("NewTwoNumber.unit64:", uint64(NewTwoNumber))
+	minter.AnnualProvisions = NewAccumulateTat //  treasuenetd query mint annual-provisions
+	// newann := NewAccumulateTat.TruncateInt64() - UnitGrant
+	// fmt.Println("newann:", newann)
+	// minter.NewAnnualProvisions = sdk.NewDec(AccumulateTat)
+	// fmt.Printf("NewAccumulateTat = %+v\n", NewAccumulateTat)
+	// NewTwoNumber := 365 * 2 * AfterWeek
+	// fmt.Println("NewTwoNumber.unit64:", uint64(NewTwoNumber))
 	// mint coins, update supply
 	// mintedCoin := minter.BlockProvision(params)
 	// mintedCoins := sdk.NewCoins(mintedCoin)

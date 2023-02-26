@@ -78,26 +78,26 @@ type Params struct {
 	MintDenom string `protobuf:"bytes,1,opt,name=mint_denom,json=mintDenom,proto3" json:"mint_denom,omitempty"`
 	// maximum annual change in inflation rate 通货膨胀率的最大年度变化
 	InflationRateChange github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=inflation_rate_change,json=inflationRateChange,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation_rate_change" yaml:"inflation_rate_change"`
-	// maximum inflation rate 最高通货膨胀率
+	// maximum inflatiProbabilityon rate 最高通货膨胀率
 	InflationMax github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=inflation_max,json=inflationMax,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation_max" yaml:"inflation_max"`
 	// minimum inflation rate 最低通货膨胀率
 	InflationMin github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=inflation_min,json=inflationMin,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation_min" yaml:"inflation_min"`
 	// goal of percent bonded atoms 键合原子百分比目标(意思是达到这个百分比后开始改变通货膨胀率来产生币，每个区块产生的币的数量都不一样)
 	GoalBonded github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=goal_bonded,json=goalBonded,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"goal_bonded" yaml:"goal_bonded"`
-	//unit上限 TAT产量的百分比
+	// unit上限 TAT产量的百分比
 	Probability github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=pro_bability,json=Probability,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"pro_bability" yaml:"pro_bability"`
-	//TAT产量累加(第一年的TAT总产量)
+	// TAT产量累加(第一年的TAT总产量)
 	UnitGrant uint64 `protobuf:"varint,7,opt,name=unit_grant,json=unitgrant,proto3" json:"unit_grant,omitempty" yaml:"unit_grant"`
 	// expected blocks per year  每年的预期区块
 	BlocksPerYear uint64 `protobuf:"varint,11,opt,name=blocks_per_year,json=blocksPerYear,proto3" json:"blocks_per_year,omitempty" yaml:"blocks_per_year"`
-	//监听开始块
+	// 监听开始块
 	StartBlock int64 `protobuf:"varint,8,opt,name=start_block,json=startblock,proto3" json:"start_block,omitempty" yaml:"start_block"`
-	//监听结束块
+	// 监听结束块
 	EndBlock int64 `protobuf:"varint,9,opt,name=end_block,json=endblock,proto3" json:"end_block,omitempty" yaml:"end_block"`
-	//监听高度
+	// 监听高度
 	HeightBlock int64 `protobuf:"varint,10,opt,name=height_block,json=heightblock,proto3" json:"height_block,omitempty" yaml:"height_block"`
-	//第一年，第二年每个块的基本奖励
-	PerReward int64 `protobuf:"varint,12,rep,name=per_reward,json=perReward,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"per_reward,omitempty" yaml:"per_reward"`
+	// 第一年，第二年每个块的基本奖励
+	PerReward string `protobuf:"varint,12,rep,name=per_reward,json=perReward,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"per_reward,omitempty" yaml:"per_reward"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }

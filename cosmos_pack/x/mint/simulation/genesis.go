@@ -42,7 +42,7 @@ func GenInflationMin(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(7, 2)
 }
 
-//GenProbability randomized GenProbability
+// GenProbability randomized GenProbability
 func GenProbability(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(1, 2)
 }
@@ -99,7 +99,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 	startBlock := int64(1)
 	endBlock := int64(1)
 	heightBlock := int64(12)
-	perreward := int64(5000000000000000000)
+	perreward := sdk.NewIntWithDecimal(int64(10), 18).String()
+	// perreward := int64(5000000000000000000)
 	params := types.NewParams(mintDenom, inflationRateChange, inflationMax, inflationMin, probabiLity, goalBonded, unitGrant, blocksPerYear, startBlock, endBlock, heightBlock, perreward)
 
 	mintGenesis := types.NewGenesisState(types.InitialMinter(inflation, tatprobability), params)

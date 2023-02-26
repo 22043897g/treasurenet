@@ -27,7 +27,7 @@ func (signModeDirectHandler) Modes() []signingtypes.SignMode {
 
 // GetSignBytes implements SignModeHandler.GetSignBytes
 func (signModeDirectHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
-	fmt.Println("测试生成bytetostring")
+	// fmt.Println("测试生成bytetostring")
 	if mode != signingtypes.SignMode_SIGN_MODE_DIRECT {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT, mode)
 	}
@@ -53,15 +53,15 @@ func DirectSignBytes(bodyBytes, authInfoBytes []byte, chainID string, accnum uin
 		ChainId:       chainID,
 		AccountNumber: accnum,
 	}
-	fmt.Printf("signDoc:%+v\n", signDoc)
-	StrsignDoc := signDoc.String()
-	fmt.Printf("StrsignDoc:%+v\n", StrsignDoc)
-	bodybyte := signDoc.GetBodyBytes()
-	fmt.Printf("bodybyte:%+v\n", string(bodybyte))
-	authInfoBytess := signDoc.GetAuthInfoBytes()
-	fmt.Printf("authInfoBytess:%+v\n", string(authInfoBytess))
+	//fmt.Printf("signDoc:%+v\n", signDoc)
+	//StrsignDoc := signDoc.String()
+	//fmt.Printf("StrsignDoc:%+v\n", StrsignDoc)
+	//bodybyte := signDoc.GetBodyBytes()
+	//fmt.Printf("bodybyte:%+v\n", string(bodybyte))
+	//authInfoBytess := signDoc.GetAuthInfoBytes()
+	//fmt.Printf("authInfoBytess:%+v\n", string(authInfoBytess))
 	dataA, _ := signDoc.Marshal()
 	_ = signDoc.Unmarshal(dataA)
-	fmt.Printf("signDoc2:%+v\n", signDoc)
+	//fmt.Printf("signDoc2:%+v\n", signDoc)
 	return signDoc.Marshal()
 }

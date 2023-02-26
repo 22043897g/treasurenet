@@ -29,7 +29,7 @@ func DefaultParams() Params {
 		CommunityTax:        sdk.NewDecWithPrec(1, 2),  // 2% 社区税默认值为百分之2
 		BaseProposerReward:  sdk.NewDecWithPrec(1, 2),  // 1% 区块提案者获得当前区块奖励的固定比例作为基础奖励 默认值为%1
 		BonusProposerReward: sdk.NewDecWithPrec(4, 2),  // 4% 区块提案者的额外奖励--》当所有活跃验证者都进行了投票并且所有的投票都被打包进区块时，区块提案者可以得到的额外奖励比例最大 默认为
-		TatReward:           sdk.NewDecWithPrec(80, 2), // 80%区块提案者的TAT奖励
+		TatReward:           sdk.NewDecWithPrec(60, 2), // 60%区块提案者的TAT奖励
 		WithdrawAddrEnabled: true,
 	}
 }

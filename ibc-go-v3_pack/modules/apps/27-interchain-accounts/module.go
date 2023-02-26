@@ -197,3 +197,8 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
+
+// EndBlock implements the AppModule interface
+func (am AppModule) NewEndBlock(ctx sdk.Context, req abci.RequestEndBlock, _ sdk.ABCIMessageLogs) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
+}

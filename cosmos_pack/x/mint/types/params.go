@@ -34,7 +34,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(
 	mintDenom string, inflationRateChange, inflationMax, inflationMin, probability, goalBonded sdk.Dec, unitGrant uint64, blocksPerYear uint64,
-	startblock, endblock, heightblock, perreward int64) Params {
+	startblock, endblock, heightblock int64, perreward string) Params {
 
 	return Params{
 		MintDenom:           mintDenom,
@@ -66,7 +66,7 @@ func DefaultParams() Params {
 		StartBlock:          int64(1),
 		EndBlock:            int64(1),
 		HeightBlock:         int64(12),
-		PerReward:           int64(5000000000000000000),
+		PerReward:           sdk.NewIntWithDecimal(int64(10), 18).String(),
 	}
 }
 
@@ -304,7 +304,7 @@ func validateHeightBlock(i interface{}) error {
 }
 
 func validatePerReward(i interface{}) error {
-	_, ok := i.(int64)
+	_, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

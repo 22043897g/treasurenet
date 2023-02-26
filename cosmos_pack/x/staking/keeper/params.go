@@ -61,7 +61,7 @@ func (k Keeper) PowerReduction(ctx sdk.Context) sdk.Int {
 	return sdk.DefaultPowerReduction
 }
 
-//This returns a global variable that the application developer can adjust
+// This returns a global variable that the application developer can adjust
 func (k Keeper) PowerReduction2(ctx sdk.Context) sdk.Int {
 	return sdk.DefaultPowerReduction2
 }

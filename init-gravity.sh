@@ -26,8 +26,8 @@ KEY2="orchestrator"
 CHAINID="treasurenet_9000-1"
 MONIKER="localtestnet"
 KEYRING="test"
-#KEYALGO="eth_secp256k1"
-KEYALGO="secp256k1"
+KEYALGO="eth_secp256k1"
+#KEYALGO="secp256k1"
 LOGLEVEL="info"
 # to trace evm
 TRACE="--trace"
@@ -49,9 +49,9 @@ $BIN config chain-id $CHAINID
 GAIA_HOME="--home /root/.treasurenetd"
 ARGS="$GAIA_HOME --keyring-backend test"
 # Generate a validator key, orchestrator key, and eth key for each validator
-$BIN keys add $KEY1 --keyring-backend $KEYRING --algo $KEYALGO 2>> /validator-phrases
-$BIN keys add $KEY2 --keyring-backend $KEYRING --algo $KEYALGO 2>> /orchestrator-phrases
-$BIN eth_keys add --keyring-backend $KEYRING >> /validator-eth-keys
+$BIN keys add $KEY1 --keyring-backend $KEYRING --algo $KEYALGO 2>> /data/validator-phrases
+$BIN keys add $KEY2 --keyring-backend $KEYRING --algo $KEYALGO 2>> /data/orchestrator-phrases
+$BIN eth_keys add --keyring-backend $KEYRING >> /data/validator-eth-keys
 # if $KEY exists it should be deleted
 #treasurenetd keys add $KEY --keyring-backend $KEYRING --algo $KEYALGO
 
