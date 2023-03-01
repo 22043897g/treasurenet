@@ -43,6 +43,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
+require github.com/treasurenetprotocol/treasurenet_ibc v1.0.2-230228-r // indirect
+
 require (
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
 	github.com/99designs/keyring v1.1.6 // indirect
@@ -168,3 +170,15 @@ replace (
 	github.com/tendermint/tendermint v0.34.21 => ./tendermint_pack
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
+// replace (
+// 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
+// 	github.com/coinbase/rosetta-sdk-go v0.7.0 => github.com/coinbase/rosetta-sdk-go v0.6.10
+// 	github.com/cosmos/cosmos-sdk v0.45.8 => github.com/treasurenetprotocol/treasurenet_cosmos v1.0.1-230228-r
+// 	github.com/cosmos/iavl v0.19.1 => github.com/cosmos/iavl v0.17.3
+// 	github.com/cosmos/ibc-go/v3 v3.2.0 => github.com/treasurenetprotocol/treasurenet_ibc v1.0.1-230228-r
+// 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+// 	github.com/osmosis-labs/bech32-ibc v0.3.0-rc1 => github.com/treasurenetprotocol/treasurenet_bech32 v1.0.1-230228-r
+// 	github.com/tendermint/tendermint v0.34.21 => github.com/treasurenetprotocol/treasurenet_tend v1.0.1-230228-r
+// 	// github.com/treasurenetprotocol/treasurenet_ibc v1.0.2-230228-r => github.com/cosmos/ibc-go/v3 v3.2.0
+// 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
+// )

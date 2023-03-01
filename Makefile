@@ -7,8 +7,8 @@ TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::'
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
-ETHERMINT_BINARY = treasurenetd
-ETHERMINT_DIR = treasurenet
+TREASURENET_BINARY = treasurenetd
+TREASURENET_DIR = treasurenet
 BUILDDIR ?= $(CURDIR)/build
 SIMAPP = ./app
 HTTPS_GIT := https://github.com/evmos/ethermint.git
@@ -63,7 +63,7 @@ build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 # process linker flags
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=treasurenet \
-		  -X github.com/cosmos/cosmos-sdk/version.AppName=$(ETHERMINT_BINARY) \
+		  -X github.com/cosmos/cosmos-sdk/version.AppName=$(TREASURENET_BINARY) \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 			-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
@@ -497,13 +497,13 @@ ifeq ($(OS),Windows_NT)
 	mkdir localnet-setup &
 	@$(MAKE) localnet-build
 
-	IF not exist "build/node0/$(ETHERMINT_BINARY)/config/genesis.json" docker run --rm -v $(CURDIR)/build\treasurenet\Z treasurenetd/node "./treasurenetd testnet --v 4 -o /treasurenet --keyring-backend=test --ip-addresses treasurenetdnode0,treasurenetdnode1,treasurenetdnode2,treasurenetdnode3"
+	IF not exist "build/node0/$(TREASURENET_BINARY)/config/genesis.json" docker run --rm -v $(CURDIR)/build\treasurenet\Z treasurenetd/node "./treasurenetd testnet --v 4 -o /treasurenet --keyring-backend=test --ip-addresses treasurenetdnode0,treasurenetdnode1,treasurenetdnode2,treasurenetdnode3"
 	docker-compose up -d
 else
 	mkdir -p localnet-setup
 	@$(MAKE) localnet-build
 
-	if ! [ -f localnet-setup/node0/$(ETHERMINT_BINARY)/config/genesis.json ]; then docker run --rm -v $(CURDIR)/localnet-setup:/treasurenet:Z treasurenetd/node "./treasurenetd testnet --v 4 -o /treasurenet --keyring-backend=test --ip-addresses treasurenetdnode0,treasurenetdnode1,treasurenetdnode2,treasurenetdnode3"; fi
+	if ! [ -f localnet-setup/node0/$(TREASURENET_BINARY)/config/genesis.json ]; then docker run --rm -v $(CURDIR)/localnet-setup:/treasurenet:Z treasurenetd/node "./treasurenetd testnet --v 4 -o /treasurenet --keyring-backend=test --ip-addresses treasurenetdnode0,treasurenetdnode1,treasurenetdnode2,treasurenetdnode3"; fi
 	docker-compose up -d
 endif
 
