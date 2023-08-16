@@ -24,6 +24,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryParams(),
 		GetCmdQueryInflation(),
 		GetCmdQueryAnnualProvisions(),
+		GetCmdQueryNewAnnualProvisions(),
 	)
 
 	return mintingQueryCmd
@@ -49,7 +50,6 @@ func GetCmdQueryParams() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			return clientCtx.PrintProto(&res.Params)
 		},
 	}
@@ -95,6 +95,36 @@ func GetCmdQueryAnnualProvisions() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "annual-provisions",
 		Short: "Query the current minting annual provisions value",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryAnnualProvisionsRequest{}
+			res, err := queryClient.AnnualProvisions(cmd.Context(), params)
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.AnnualProvisions))
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryAnnualProvisions implements a command to return the current minting
+// annual provisions value.
+func GetCmdQueryNewAnnualProvisions() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "newannual-provisions",
+		Short: "Query the current minting newannual provisions value",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

@@ -29,7 +29,7 @@ var _ types.MsgServer = msgServer{}
 // CreateValidator defines a method for creating a new validator
 func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	//fmt.Println("msg",&msg)
+	// fmt.Println("msg",&msg)
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByConsAddr(ctx, validator)
-	//k.SetNewValidatorByPowerIndex(ctx, validator)
+	// k.SetNewValidatorByPowerIndex(ctx, validator)
 	// call the after-creation hook
 	k.AfterValidatorCreated(ctx, validator.GetOperator())
 
@@ -101,7 +101,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	// the validator account and global shares are updated within here
 	// NOTE source will always be from a wallet which are unbonded
 	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
-	//_, err = k.Keeper.DelegateTat(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
+	// _, err = k.Keeper.DelegateTat(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}

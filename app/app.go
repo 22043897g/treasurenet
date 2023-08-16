@@ -1,17 +1,20 @@
 package app
 
 import (
+	"context"
+	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -33,10 +36,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -83,39 +86,44 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/cosmos/ibc-go/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/modules/core"
-	ibcclient "github.com/cosmos/ibc-go/modules/core/02-client"
-	ibcclientclient "github.com/cosmos/ibc-go/modules/core/02-client/client"
-	porttypes "github.com/cosmos/ibc-go/modules/core/05-port/types"
-	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
-	ibckeeper "github.com/cosmos/ibc-go/modules/core/keeper"
+	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v3/modules/core"
+	ibcclient "github.com/cosmos/ibc-go/v3/modules/core/02-client"
+	ibcclientclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/client"
+	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
+	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 
 	// unnamed import of statik for swagger UI support
-	"github.com/treasurenet/app/ante"
-	_ "github.com/treasurenet/client/docs/statik"
-	srvflags "github.com/treasurenet/server/flags"
-	treasurenet "github.com/treasurenet/types"
-	"github.com/treasurenet/x/evm"
-	evmrest "github.com/treasurenet/x/evm/client/rest"
-	evmkeeper "github.com/treasurenet/x/evm/keeper"
-	evmtypes "github.com/treasurenet/x/evm/types"
+
+	_ "github.com/treasurenetprotocol/treasurenet/client/docs/statik"
+
+	"github.com/treasurenetprotocol/treasurenet/app/ante"
+	srvflags "github.com/treasurenetprotocol/treasurenet/server/flags"
+	treasurenet "github.com/treasurenetprotocol/treasurenet/types"
+	"github.com/treasurenetprotocol/treasurenet/x/evm"
+	evmrest "github.com/treasurenetprotocol/treasurenet/x/evm/client/rest"
+	evmkeeper "github.com/treasurenetprotocol/treasurenet/x/evm/keeper"
+	evmtypes "github.com/treasurenetprotocol/treasurenet/x/evm/types"
+	"github.com/treasurenetprotocol/treasurenet/x/feemarket"
+	feemarketkeeper "github.com/treasurenetprotocol/treasurenet/x/feemarket/keeper"
+	feemarkettypes "github.com/treasurenetprotocol/treasurenet/x/feemarket/types"
+
+	// Osmosis-Labs Bech32-IBC
+	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
+	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
+	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
+
+	gravity "github.com/treasurenetprotocol/treasurenet/x/gravity"
+	"github.com/treasurenetprotocol/treasurenet/x/gravity/keeper"
+	gravitytypes "github.com/treasurenetprotocol/treasurenet/x/gravity/types"
+
+	// Force-load the tracer engines to trigger registration due to Go-Ethereum v1.10.15 changes
+	_ "github.com/ethereum/go-ethereum/eth/tracers/js"
+	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
 )
-
-func init() {
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-
-	DefaultNodeHome = filepath.Join(userHomeDir, ".treasurenetd")
-}
-
-func init() {
-
-}
 
 const appName = "treasurenetd"
 
@@ -148,7 +156,11 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		gravity.AppModuleBasic{},
+		bech32ibc.AppModuleBasic{},
+		// Treasurenet modules
 		evm.AppModuleBasic{},
+		feemarket.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -161,6 +173,7 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner}, // used for secure addition and subtraction of balance using module account
+		gravitytypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -171,7 +184,7 @@ var (
 
 var _ simapp.App = (*TreasurenetApp)(nil)
 
-// var _ server.Application (*TreasurenetApp)(nil)
+var _ servertypes.Application = (*TreasurenetApp)(nil)
 
 // TreasurenetApp implements an extended ABCI application. It is an application
 // that may process transactions through Ethereum's EVM running atop of
@@ -192,8 +205,9 @@ type TreasurenetApp struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	// keepers
-	AccountKeeper    authkeeper.AccountKeeper
-	BankKeeper       bankkeeper.Keeper
+	AccountKeeper authkeeper.AccountKeeper
+	// BankKeeper       bankkeeper.Keeper
+	BankKeeper       bankkeeper.BaseKeeper
 	CapabilityKeeper *capabilitykeeper.Keeper
 	StakingKeeper    stakingkeeper.Keeper
 	SlashingKeeper   slashingkeeper.Keeper
@@ -208,13 +222,15 @@ type TreasurenetApp struct {
 	IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
-
+	GravityKeeper    keeper.Keeper
+	Bech32IbcKeeper  bech32ibckeeper.Keeper
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
 	// Treasurenet keepers
-	EvmKeeper *evmkeeper.Keeper
+	EvmKeeper       *evmkeeper.Keeper
+	FeeMarketKeeper feemarketkeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -224,6 +240,14 @@ type TreasurenetApp struct {
 
 	// the configurator
 	configurator module.Configurator
+}
+
+func init() {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	DefaultNodeHome = filepath.Join(userHomeDir, ".treasurenetd")
 }
 
 // NewTreasurenetApp returns a reference to a new initialized Treasurenet application.
@@ -239,7 +263,6 @@ func NewTreasurenetApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *TreasurenetApp {
-
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -265,12 +288,14 @@ func NewTreasurenetApp(
 		feegrant.StoreKey, authzkeeper.StoreKey,
 		// ibc keys
 		ibchost.StoreKey, ibctransfertypes.StoreKey,
+		gravitytypes.StoreKey,
+		bech32ibctypes.StoreKey,
 		// treasurenet keys
-		evmtypes.StoreKey,
+		evmtypes.StoreKey, feemarkettypes.StoreKey,
 	)
 
 	// Add the EVM transient store key
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey)
+	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	app := &TreasurenetApp{
@@ -303,6 +328,11 @@ func NewTreasurenetApp(
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), treasurenet.ProtoAccount, maccPerms,
 	)
+
+	// app.AccountKeeper = authkeeper.NewAccountKeeper(
+	// 	appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms,
+	// )
+
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
 	)
@@ -326,35 +356,83 @@ func NewTreasurenetApp(
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
 
-	// register the staking hooks
-	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	app.StakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
-	)
+	// // register the staking hooks
+	// // NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
+	// app.StakingKeeper = *stakingKeeper.SetHooks(
+	// 	stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
+	// )
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter())
 
 	tracer := cast.ToString(appOpts.Get(srvflags.EVMTracer))
 
-	// Create Treasurenet keepers
-	app.EvmKeeper = evmkeeper.NewKeeper(
-		appCodec, keys[evmtypes.StoreKey], tkeys[evmtypes.TransientKey], app.GetSubspace(evmtypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper, app.StakingKeeper,
-		tracer, bApp.Trace(), // debug EVM based on Baseapp options
-	)
-
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
+		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), stakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
 
-	// register the proposal types
+	// Create Treasurenet keepers
+	app.FeeMarketKeeper = feemarketkeeper.NewKeeper(
+		appCodec, app.GetSubspace(feemarkettypes.ModuleName), keys[feemarkettypes.StoreKey], tkeys[feemarkettypes.TransientKey],
+	)
+
+	app.Bech32IbcKeeper = *bech32ibckeeper.NewKeeper(
+		app.IBCKeeper.ChannelKeeper,
+		appCodec,
+		keys[bech32ibctypes.StoreKey],
+		app.TransferKeeper,
+	)
+
+	app.GravityKeeper = keeper.NewKeeper(
+		keys[gravitytypes.StoreKey],
+		app.GetSubspace(gravitytypes.ModuleName),
+		appCodec,
+		&app.BankKeeper,
+		&stakingKeeper,
+		&app.SlashingKeeper,
+		&app.DistrKeeper,
+		&app.AccountKeeper,
+		&app.TransferKeeper,
+		&app.Bech32IbcKeeper,
+	)
+
+	// app.GravityKeeper = keeper.NewKeeper(
+	// 	appCodec,
+	// 	keys[gravitytypes.StoreKey],
+	// 	app.GetSubspace(gravitytypes.ModuleName),
+	// 	app.StakingKeeper,
+	// 	app.BankKeeper,
+	// 	app.SlashingKeeper,
+	// )
+
+	// register the staking hooks
+	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
+	app.StakingKeeper = *stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.GravityKeeper.Hooks()),
+	)
+	// app.StakingKeeper = *stakingKeeper.SetHooks(
+	// 	stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
+	// )
+	app.EvmKeeper = evmkeeper.NewKeeper(
+		appCodec, keys[evmtypes.StoreKey], tkeys[evmtypes.TransientKey], app.GetSubspace(evmtypes.ModuleName),
+		app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.FeeMarketKeeper,
+		tracer,
+	)
+
+	// // Create IBC Keeper
+	// app.IBCKeeper = ibckeeper.NewKeeper(
+	// 	appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
+	// )
+
+	// register the proposal types 提案路由
 	govRouter := govtypes.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
+		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(gravitytypes.RouterKey, keeper.NewGravityProposalHandler(app.GravityKeeper)).
+		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(app.Bech32IbcKeeper))
 
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
@@ -370,14 +448,15 @@ func NewTreasurenetApp(
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
-		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
+		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 	)
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
+	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
-	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferModule)
+	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router
@@ -401,7 +480,8 @@ func NewTreasurenetApp(
 			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
 			encodingConfig.TxConfig,
 		),
-		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+		// auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+		auth.NewAppModule(appCodec, app.AccountKeeper, nil),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
@@ -410,7 +490,6 @@ func NewTreasurenetApp(
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		//staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.EvmKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -423,6 +502,15 @@ func NewTreasurenetApp(
 		transferModule,
 		// Treasurenet app modules
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
+		gravity.NewAppModule(
+			app.GravityKeeper,
+			app.BankKeeper,
+		),
+		bech32ibc.NewAppModule(
+			appCodec,
+			app.Bech32IbcKeeper,
+		),
+		feemarket.NewAppModule(app.FeeMarketKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -434,13 +522,54 @@ func NewTreasurenetApp(
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
+		feemarkettypes.ModuleName,
 		evmtypes.ModuleName,
-		minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
+		minttypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		evidencetypes.ModuleName,
+		stakingtypes.ModuleName,
+		ibchost.ModuleName,
+		// no-op modules
+		ibctransfertypes.ModuleName,
+		bech32ibctypes.ModuleName,
+		gravitytypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		govtypes.ModuleName,
+		crisistypes.ModuleName,
+		genutiltypes.ModuleName,
+		authz.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName,
+		vestingtypes.ModuleName,
 	)
+
+	// NOTE: fee market module must go last in order to retrieve the block gas used.
 	app.mm.SetOrderEndBlockers(
-		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName,
+		crisistypes.ModuleName,
+		govtypes.ModuleName,
+		stakingtypes.ModuleName,
+		gravitytypes.ModuleName,
 		evmtypes.ModuleName,
+		feemarkettypes.ModuleName,
+		// no-op modules
+		ibchost.ModuleName,
+		ibctransfertypes.ModuleName,
+		bech32ibctypes.ModuleName,
+		capabilitytypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		minttypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		authz.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -450,13 +579,30 @@ func NewTreasurenetApp(
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
 		// SDK modules
-		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
-		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName,
-		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
-		authz.ModuleName, feegrant.ModuleName,
-		// Treasurenet modules
+		capabilitytypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		stakingtypes.ModuleName,
+		slashingtypes.ModuleName,
+		govtypes.ModuleName,
+		minttypes.ModuleName,
+		ibchost.ModuleName,
+		gravitytypes.ModuleName,
+		// evm module denomination is used by the feemarket module, in AnteHandle
 		evmtypes.ModuleName,
-
+		bech32ibctypes.ModuleName,
+		// NOTE: feemarket need to be initialized before genutil module:
+		// gentx transactions use MinGasPriceDecorator.AnteHandle
+		feemarkettypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		ibctransfertypes.ModuleName,
+		authz.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	)
@@ -471,10 +617,11 @@ func NewTreasurenetApp(
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 
-	//NOTE: this is not required apps that don't use the simulator for fuzz testing
+	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	app.sm = module.NewSimulationManager(
-		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+		// Use custom RandomGenesisAccounts so that auth module could create random EthAccounts in genesis state when genesis.json not specified
+		auth.NewAppModule(appCodec, app.AccountKeeper, RandomGenesisAccounts),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
@@ -488,6 +635,8 @@ func NewTreasurenetApp(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
+		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
+		feemarket.NewAppModule(app.FeeMarketKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -502,13 +651,23 @@ func NewTreasurenetApp(
 	app.SetBeginBlocker(app.BeginBlocker)
 
 	// use Treasurenet's custom AnteHandler
-	app.SetAnteHandler(
-		ante.NewAnteHandler(
-			app.AccountKeeper, app.BankKeeper, app.EvmKeeper, app.FeeGrantKeeper, app.IBCKeeper.ChannelKeeper,
-			encodingConfig.TxConfig.SignModeHandler(),
-		),
-	)
 
+	maxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
+	anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
+		AccountKeeper:   app.AccountKeeper,
+		BankKeeper:      app.BankKeeper,
+		EvmKeeper:       app.EvmKeeper,
+		FeegrantKeeper:  app.FeeGrantKeeper,
+		IBCKeeper:       app.IBCKeeper,
+		FeeMarketKeeper: app.FeeMarketKeeper,
+		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+		MaxTxGasWanted:  maxGasWanted,
+	})
+	if err != nil {
+		panic(err)
+	}
+	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {
@@ -526,59 +685,207 @@ func NewTreasurenetApp(
 // Name returns the name of the App
 func (app *TreasurenetApp) Name() string { return app.BaseApp.Name() }
 
-// BeginBlocker updates every begin block
-func (app *TreasurenetApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	return app.mm.BeginBlock(ctx, req)
+// int64 return []byte
+func Int64ToBytes(i int64) []byte {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, uint64(i))
+	return buf
 }
 
-// EndBlocker updates every end block
+// BeginBlocker updates every begin block
+func (app *TreasurenetApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	var delta sdk.Dec
+	paramsnew := app.MintKeeper.GetParams(ctx)
+	stakingparamsnew := app.StakingKeeper.GetParams(ctx)
+	stakingparamsnew.UnbondingTime = time.Hour * 24 * 7 * 3
+	app.StakingKeeper.SetParams(ctx, stakingparamsnew)
+	if paramsnew.EndBlock < int64(6311521) {
+		paramsnew.EndBlock = int64(6311520)
+		// paramsnew.EndBlock = int64(120) + req.Header.Height
+		app.MintKeeper.SetParams(ctx, paramsnew)
+	}
+	// if paramsnew.EndBlock < req.Header.Height-int64(2) || paramsnew.EndBlock == int64(6311520) {
+	// 	// paramsnew.EndBlock = int64(6311520)
+	// 	paramsnew.EndBlock = int64(120) + req.Header.Height
+	// 	app.MintKeeper.SetParams(ctx, paramsnew)
+	// }
+	reqnew := req.Header.Height
+
+	if paramsnew.EndBlock == reqnew {
+		nowTime := time.Now().Add(2 * time.Second)
+		ctx1, _ := context.WithDeadline(context.Background(), nowTime)
+		go getMintat(ctx1)
+	}
+
+	if paramsnew.EndBlock+int64(1) == reqnew && !tat.IsNil() {
+		year, _ := app.MintKeeper.GettMinterYear(ctx)
+		TatAll, _ := app.MintKeeper.GettMinterTatAll(ctx)
+		newtatstart, _ := tat.Sub(TatAll).MarshalJSON()
+		OldTatAll, _ := tat.MarshalJSON()
+		app.MintKeeper.SetMinterTat(ctx, Int64ToBytes(year.Int64()), newtatstart)
+		app.MintKeeper.SetMinterTatAll(ctx, OldTatAll)
+	}
+	if paramsnew.EndBlock+int64(2) == reqnew {
+		newyear, _ := app.MintKeeper.GettMinterYear(ctx)
+		// newyearend, _ := newyear.Marshal()
+		newTatEnd, _ := app.MintKeeper.GetMinterTatNew(ctx, Int64ToBytes(newyear.Int64()))
+		newyearstart := newyear.Sub(sdk.OneInt())
+		newTat, _ := app.MintKeeper.GetMinterTatNew(ctx, Int64ToBytes(newyearstart.Int64()))
+		if newyear.Int64() > int64(1) {
+			if newTatEnd.IsZero() || newTat.IsZero() {
+				delta = sdk.NewDecWithPrec(50, 2)
+				NewPerReward, _ := sdk.NewDecFromStr(paramsnew.PerReward)
+				paramsnew.PerReward = delta.Mul(NewPerReward).String()
+			} else {
+				delta = sdk.NewDecFromInt(newTatEnd).Quo(sdk.NewDecFromInt(newTat)).Quo(sdk.NewDecWithPrec(110, 2))
+				// if delta.RoundInt64() > int64(0) && delta.RoundInt64() < int64(1) {
+				if sdk.MaxDec(delta, sdk.NewDecWithPrec(0, 2)) == delta && sdk.MinDec(delta, sdk.NewDecWithPrec(100, 2)) == delta {
+					newdelta := sdk.NewDecWithPrec(90, 2).Sub(sdk.NewDecWithPrec(75, 2)).Mul(delta)
+					newdeltatat := sdk.NewDecWithPrec(75, 2).Add(newdelta)
+					NewPerReward, _ := sdk.NewDecFromStr(paramsnew.PerReward)
+					paramsnew.PerReward = newdeltatat.Mul(NewPerReward).String()
+				}
+				if sdk.MaxDec(delta, sdk.NewDecWithPrec(100, 2)) == delta || sdk.NewDecWithPrec(100, 2) == delta {
+					// math.Floor(Float64())
+					newdelta1 := delta.Sub(sdk.OneDec())
+					newdelta2, err := newdelta1.Float64()
+					if err != nil {
+						panic(err)
+					}
+					// newdelta3 := math.Floor(newdelta2)
+					// newdelta4 := strconv.FormatFloat(newdelta3, 'f', -1, 64)
+					// newdelta5 := sdk.MustNewDecFromStr(newdelta4)
+					// newdelta6 := sdk.NewDecWithPrec(1, 2).Mul(newdelta5).Add(sdk.NewDecWithPrec(90, 2))
+					// newdelta7 := sdk.MinDec(newdelta6, sdk.NewDecWithPrec(99, 2))
+					newdeltatats := sdk.MinDec(sdk.NewDecWithPrec(1, 2).Mul(sdk.MustNewDecFromStr(strconv.FormatFloat(math.Floor(newdelta2), 'f', -1, 64))).Add(sdk.NewDecWithPrec(90, 2)), sdk.NewDecWithPrec(99, 2))
+					NewPerReward, _ := sdk.NewDecFromStr(paramsnew.PerReward)
+					paramsnew.PerReward = newdeltatats.Mul(NewPerReward).String()
+				}
+			}
+		}
+		// paramsnew.EndBlock += int64(120)
+		paramsnew.EndBlock += int64(6311520)
+		app.MintKeeper.SetParams(ctx, paramsnew)
+		year, _ := app.MintKeeper.GettMinterYear(ctx)
+		yearnew, _ := year.Add(sdk.OneInt()).MarshalJSON()
+		app.MintKeeper.SetMinterYear(ctx, yearnew)
+	}
+	return app.mm.BeginBlock(ctx, req)
+}
 func (app *TreasurenetApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	var msgLog sdk.ABCIMessageLog
+	var msgLogs sdk.ABCIMessageLogs
 	params := app.MintKeeper.GetParams(ctx)
 	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
+	// if params.HeightBlock == int64(12) {
+	// 	params.HeightBlock = int64(2)
+	// 	app.MintKeeper.SetParams(ctx, params)
+	// }
 	StartBlock := params.StartBlock
 	EndBlock := params.StartBlock + params.HeightBlock
-	//fmt.Println("loger:", app.Logger().With())
+	HeightBlock := params.HeightBlock
+	// EndBlock := params.StartBlock + params.HeightBlock
+	// fmt.Println("loger:", app.Logger().With())
 	newreq := req.Height
-	if EndBlock == newreq {
-		go getLogs(StartBlock, EndBlock)
-		params.StartBlock = EndBlock
+	if EndBlock < newreq {
+		params.StartBlock = newreq
 		app.MintKeeper.SetParams(ctx, params)
 	}
-	if StartBlock+int64(1) == newreq {
-		if Even.Code == 200 {
-			fmt.Println("Log acquisition succeeded")
-			res, _ := json.Marshal(Even.Data)
-			msgLog := sdk.NewABCIMessageLog(uint32(1), string(res), events)
-			msgLogs := sdk.ABCIMessageLogs{msgLog}
-			Even.Code = 0
-			Even.Msg = "Initialization data"
-			Even.Data = make([][]interface{}, 0)
-			//return app.mm.EndBlock(ctx, req)
-			return app.mm.NewEndBlock(ctx, req, msgLogs)
-		} else {
-			// fmt.Println("the log is null")
-			// fmt.Printf("if judge even:%+v\n", Even)
-			msgLog := sdk.NewABCIMessageLog(uint32(2), "No data was obtained", events)
-			msgLogs := sdk.ABCIMessageLogs{msgLog}
-			Even.Code = 0
-			Even.Msg = "Initialization data"
-			Even.Data = make([][]interface{}, 0)
-			//return app.mm.EndBlock(ctx, req)
-			return app.mm.NewEndBlock(ctx, req, msgLogs)
-		}
-	} else {
-		msgLog := sdk.NewABCIMessageLog(uint32(2), "Listening not started", events)
-		msgLogs := sdk.ABCIMessageLogs{msgLog}
-		Even.Code = 0
-		Even.Msg = "Initialization data"
-		Even.Data = make([][]interface{}, 0)
-		//return app.mm.EndBlock(ctx, req)
-		return app.mm.NewEndBlock(ctx, req, msgLogs)
+	// if EndBlock != newreq && HeightBlock == int64(2) {
+	// 	msgLog = sdk.NewABCIMessageLog(uint32(2), "  We haven't started bidding yet EndBlock != newreq height=2 ", events)
+	// 	msgLogs = sdk.ABCIMessageLogs{msgLog}
+	// }
+	if EndBlock == newreq && HeightBlock == int64(2) {
+		nowTime := time.Now().Add(2 * time.Second)
+		ctx1, _ := context.WithDeadline(context.Background(), nowTime)
+		// go getLogsNew(ctx1, StartBlock, EndBlock)
+		go getBidStartLogsNew(ctx1, StartBlock, EndBlock)
+		params.StartBlock = EndBlock
+		app.MintKeeper.SetParams(ctx, params)
+		msgLog = sdk.NewABCIMessageLog(uint32(3), "  We haven't started bidding yet EndBlock == newreq height=2 ", events)
+		msgLogs = sdk.ABCIMessageLogs{msgLog}
 	}
-	// res, _ := json.Marshal(Even.Data)
-	// events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
-	// msgLog := sdk.NewABCIMessageLog(0, string(res), events)
-	//msgLog := sdk.NewABCIMessageLog(0, "log test", events)
+	if EndBlock != newreq && HeightBlock == int64(2) {
+		msgLog = sdk.NewABCIMessageLog(uint32(3), "  We haven't started bidding yet EndBlock != newreq height=2 ", events)
+		msgLogs = sdk.ABCIMessageLogs{msgLog}
+	}
+	// if EndBlock != newreq && HeightBlock == int64(60) && StartBlock+int64(1) != newreq {
+	// 	msgLog = sdk.NewABCIMessageLog(uint32(2), " We haven't started a new round of bidding yet EndBlock != newreq height=60", events)
+	// 	msgLogs = sdk.ABCIMessageLogs{msgLog}
+	// 	// return app.mm.EndBlock(ctx, req)
+	// }
+	if EndBlock == newreq && HeightBlock == int64(60) {
+		nowTime := time.Now().Add(2 * time.Second)
+		ctx1, _ := context.WithDeadline(context.Background(), nowTime)
+		go getLogs(ctx1, StartBlock, EndBlock)
+		// go getLogsNew(ctx1, StartBlock, EndBlock)
+		params.StartBlock = EndBlock
+		app.MintKeeper.SetParams(ctx, params)
+		msgLog = sdk.NewABCIMessageLog(uint32(2), " We haven't started a new round of bidding yet ", events)
+		msgLogs = sdk.ABCIMessageLogs{msgLog}
+		// return app.mm.EndBlock(ctx, req)
+	}
+	if StartBlock+int64(1) == newreq && HeightBlock != int64(60) {
+		if Even.Code == 200 && len(Even.Data) > 0 {
+			res1 := Even.Data[0]
+			res2, _ := json.Marshal(res1)
+			heigehtnew := string(res2[1:4])
+			heigehtnew1, _ := sdk.NewIntFromString(heigehtnew)
+			NewHeight := heigehtnew1.Int64()
+			// 根据监听到的NewHeight 来计算bid范围
+			NewHeight2 := newreq - NewHeight
+			//向下取整
+			num := NewHeight2 / int64(60)
+			Newnum := NewHeight2 - num*60
+			NewHeight3 := newreq - Newnum
+			params.HeightBlock = int64(60)
+			params.StartBlock = NewHeight3 + int64(60)
+			app.MintKeeper.SetParams(ctx, params)
+		} else {
+			params.HeightBlock = int64(2)
+			app.MintKeeper.SetParams(ctx, params)
+		}
+		msgLog = sdk.NewABCIMessageLog(uint32(3), " We haven't started bidding yetStartBlock+int64(1) == newreq height!=60 ", events)
+		msgLogs = sdk.ABCIMessageLogs{msgLog}
+		// msgLog = sdk.NewABCIMessageLog(uint32(2), "Listening not started", events)
+		// msgLogs = sdk.ABCIMessageLogs{msgLog}
+		// return app.mm.EndBlock(ctx, req)
+		// return app.mm.NewEndBlock(ctx, req, msgLogs)
+	}
+	if StartBlock+int64(1) == newreq && HeightBlock == int64(60) {
+		// if EvenNew.Code == 200 {
+		// 	fmt.Println("Log acquisition succeeded")
+		// 	res, _ := json.Marshal(EvenNew.Data)
+		// 	msgLog := sdk.NewABCIMessageLog(uint32(1), string(res), events)
+		// 	msgLogs := sdk.ABCIMessageLogs{msgLog}
+		// 	// EvenNew.Code = 0
+		// 	// EvenNew.Msg = "Initialization event data "
+		// 	// // Even.Data = make([][]interface{}, 0)
+		// 	// EvenNew.Data = [][]interface{}{}
+		// 	// return app.mm.EndBlock(ctx, req)
+		// 	return app.mm.NewEndBlock(ctx, req, msgLogs)
+		// } else {
+		// // fmt.Println("the log is null")
+		// fmt.Printf("code 不为200但是已经开始bid了:%+v\n", EvenNew)
+		// res, _ := json.Marshal(EvenNew.Data)
+		// msgLog := sdk.NewABCIMessageLog(uint32(1), string(res), events)
+		// msgLogs := sdk.ABCIMessageLogs{msgLog}
+		// // EvenNew.Code = 0
+		// // EvenNew.Msg = "No listening data"
+		// // EvenNew.Data = [][]interface{}{}
+		// // return app.mm.EndBlock(ctx, req)
+		// return app.mm.NewEndBlock(ctx, req, msgLogs)
+		// }
+		res, _ := json.Marshal(EvenNew.Data)
+		msgLog = sdk.NewABCIMessageLog(uint32(1), string(res), events)
+		msgLogs = sdk.ABCIMessageLogs{msgLog}
+		// return app.mm.NewEndBlock(ctx, req, msgLogs)
+	}
+	if StartBlock+int64(1) != newreq && HeightBlock == int64(60) {
+		msgLog = sdk.NewABCIMessageLog(uint32(2), " We haven't started a new round of bidding yet ", events)
+		msgLogs = sdk.ABCIMessageLogs{msgLog}
+	}
+	return app.mm.NewEndBlock(ctx, req, msgLogs)
 }
 
 // InitChainer updates at chain initialization
@@ -726,7 +1033,8 @@ func GetMaccPerms() map[string][]string {
 
 // initParamsKeeper init params keeper and its subspaces
 func initParamsKeeper(
-	appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
+	appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey,
+) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
 	// SDK subspaces
@@ -740,7 +1048,9 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(gravitytypes.ModuleName)
 	// treasurenet subspaces
 	paramsKeeper.Subspace(evmtypes.ModuleName)
+	paramsKeeper.Subspace(feemarkettypes.ModuleName)
 	return paramsKeeper
 }

@@ -51,7 +51,7 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 	}
 
 	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "Address cannot be empty")
+		return nil, status.Error(codes.InvalidArgument, "ACCOUNT Account Address cannot be empty")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

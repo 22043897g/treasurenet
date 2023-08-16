@@ -14,6 +14,7 @@
     - [Log](#ethermint.evm.v1.Log)
     - [Params](#ethermint.evm.v1.Params)
     - [State](#ethermint.evm.v1.State)
+    - [TraceConfig](#ethermint.evm.v1.TraceConfig)
     - [TransactionLogs](#ethermint.evm.v1.TransactionLogs)
     - [TxResult](#ethermint.evm.v1.TxResult)
   
@@ -38,20 +39,20 @@
     - [QueryAccountResponse](#ethermint.evm.v1.QueryAccountResponse)
     - [QueryBalanceRequest](#ethermint.evm.v1.QueryBalanceRequest)
     - [QueryBalanceResponse](#ethermint.evm.v1.QueryBalanceResponse)
-    - [QueryBlockBloomRequest](#ethermint.evm.v1.QueryBlockBloomRequest)
-    - [QueryBlockBloomResponse](#ethermint.evm.v1.QueryBlockBloomResponse)
-    - [QueryBlockLogsRequest](#ethermint.evm.v1.QueryBlockLogsRequest)
-    - [QueryBlockLogsResponse](#ethermint.evm.v1.QueryBlockLogsResponse)
+    - [QueryBaseFeeRequest](#ethermint.evm.v1.QueryBaseFeeRequest)
+    - [QueryBaseFeeResponse](#ethermint.evm.v1.QueryBaseFeeResponse)
     - [QueryCodeRequest](#ethermint.evm.v1.QueryCodeRequest)
     - [QueryCodeResponse](#ethermint.evm.v1.QueryCodeResponse)
     - [QueryCosmosAccountRequest](#ethermint.evm.v1.QueryCosmosAccountRequest)
     - [QueryCosmosAccountResponse](#ethermint.evm.v1.QueryCosmosAccountResponse)
     - [QueryParamsRequest](#ethermint.evm.v1.QueryParamsRequest)
     - [QueryParamsResponse](#ethermint.evm.v1.QueryParamsResponse)
-    - [QueryStaticCallRequest](#ethermint.evm.v1.QueryStaticCallRequest)
-    - [QueryStaticCallResponse](#ethermint.evm.v1.QueryStaticCallResponse)
     - [QueryStorageRequest](#ethermint.evm.v1.QueryStorageRequest)
     - [QueryStorageResponse](#ethermint.evm.v1.QueryStorageResponse)
+    - [QueryTraceBlockRequest](#ethermint.evm.v1.QueryTraceBlockRequest)
+    - [QueryTraceBlockResponse](#ethermint.evm.v1.QueryTraceBlockResponse)
+    - [QueryTraceTxRequest](#ethermint.evm.v1.QueryTraceTxRequest)
+    - [QueryTraceTxResponse](#ethermint.evm.v1.QueryTraceTxResponse)
     - [QueryTxLogsRequest](#ethermint.evm.v1.QueryTxLogsRequest)
     - [QueryTxLogsResponse](#ethermint.evm.v1.QueryTxLogsResponse)
     - [QueryValidatorAccountRequest](#ethermint.evm.v1.QueryValidatorAccountRequest)
@@ -59,10 +60,29 @@
   
     - [Query](#ethermint.evm.v1.Query)
   
+- [ethermint/feemarket/v1/feemarket.proto](#ethermint/feemarket/v1/feemarket.proto)
+    - [Params](#ethermint.feemarket.v1.Params)
+  
+- [ethermint/feemarket/v1/genesis.proto](#ethermint/feemarket/v1/genesis.proto)
+    - [GenesisState](#ethermint.feemarket.v1.GenesisState)
+  
+- [ethermint/feemarket/v1/query.proto](#ethermint/feemarket/v1/query.proto)
+    - [QueryBaseFeeRequest](#ethermint.feemarket.v1.QueryBaseFeeRequest)
+    - [QueryBaseFeeResponse](#ethermint.feemarket.v1.QueryBaseFeeResponse)
+    - [QueryBlockGasRequest](#ethermint.feemarket.v1.QueryBlockGasRequest)
+    - [QueryBlockGasResponse](#ethermint.feemarket.v1.QueryBlockGasResponse)
+    - [QueryParamsRequest](#ethermint.feemarket.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#ethermint.feemarket.v1.QueryParamsResponse)
+  
+    - [Query](#ethermint.feemarket.v1.Query)
+  
 - [ethermint/types/v1/account.proto](#ethermint/types/v1/account.proto)
     - [EthAccount](#ethermint.types.v1.EthAccount)
   
-- [ethermint/types/web3.proto](#ethermint/types/web3.proto)
+- [ethermint/types/v1/indexer.proto](#ethermint/types/v1/indexer.proto)
+    - [TxResult](#ethermint.types.v1.TxResult)
+  
+- [ethermint/types/v1/web3.proto](#ethermint/types/v1/web3.proto)
     - [ExtensionOptionsWeb3Tx](#ethermint.types.v1.ExtensionOptionsWeb3Tx)
   
 - [Scalar Value Types](#scalar-value-types)
@@ -163,9 +183,10 @@ instead of *big.Int.
 | `istanbul_block` | [string](#string) |  | Istanbul switch block (nil no fork, 0 = already on istanbul) |
 | `muir_glacier_block` | [string](#string) |  | Eip-2384 (bomb delay) switch block (nil no fork, 0 = already activated) |
 | `berlin_block` | [string](#string) |  | Berlin switch block (nil = no fork, 0 = already on berlin) |
-| `yolo_v3_block` | [string](#string) |  | YOLO v3: Gas repricings |
-| `ewasm_block` | [string](#string) |  | EWASM switch block (nil no fork, 0 = already activated) |
-| `catalyst_block` | [string](#string) |  | Catalyst switch block (nil = no fork, 0 = already on catalyst) |
+| `london_block` | [string](#string) |  | London switch block (nil = no fork, 0 = already on london) |
+| `arrow_glacier_block` | [string](#string) |  | Eip-4345 (bomb delay) switch block (nil = no fork, 0 = already activated) |
+| `gray_glacier_block` | [string](#string) |  | EIP-5133 (bomb delay) switch block (nil = no fork, 0 = already activated) |
+| `merge_netsplit_block` | [string](#string) |  | Virtual fork after The Merge to use as a network splitter |
 
 
 
@@ -210,6 +231,7 @@ Params defines the EVM module parameters
 | `enable_call` | [bool](#bool) |  | enable call toggles state transitions that use the vm.Call function |
 | `extra_eips` | [int64](#int64) | repeated | extra eips defines the additional EIPs for the vm.Config |
 | `chain_config` | [ChainConfig](#ethermint.evm.v1.ChainConfig) |  | chain config defines the EVM chain configuration parameters |
+| `allow_unprotected_txs` | [bool](#bool) |  | Allow unprotected transactions defines if replay-protected (i.e non EIP155 signed) transactions can be executed on the state machine. |
 
 
 
@@ -226,6 +248,30 @@ State represents a single Storage key value pair item.
 | ----- | ---- | ----- | ----------- |
 | `key` | [string](#string) |  |  |
 | `value` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="ethermint.evm.v1.TraceConfig"></a>
+
+### TraceConfig
+TraceConfig holds extra parameters to trace functions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tracer` | [string](#string) |  | custom javascript tracer |
+| `timeout` | [string](#string) |  | overrides the default timeout of 5 seconds for JavaScript-based tracing calls |
+| `reexec` | [uint64](#uint64) |  | number of blocks the tracer is willing to go back |
+| `disable_stack` | [bool](#bool) |  | disable stack capture |
+| `disable_storage` | [bool](#bool) |  | disable storage capture |
+| `debug` | [bool](#bool) |  | print output during capture end |
+| `limit` | [int32](#int32) |  | maximum length of output, but zero means unlimited |
+| `overrides` | [ChainConfig](#ethermint.evm.v1.ChainConfig) |  | Chain overrides, can be used to execute a trace using future fork rules |
+| `enable_memory` | [bool](#bool) |  | enable memory capture |
+| `enable_return_data` | [bool](#bool) |  | enable return data capture |
 
 
 
@@ -314,8 +360,7 @@ GenesisState defines the evm module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `accounts` | [GenesisAccount](#ethermint.evm.v1.GenesisAccount) | repeated | accounts is an array containing the ethereum genesis accounts. |
-| `params` | [Params](#ethermint.evm.v1.Params) |  | params defines all the paramaters of the module. |
-| `txs_logs` | [TransactionLogs](#ethermint.evm.v1.TransactionLogs) | repeated |  |
+| `params` | [Params](#ethermint.evm.v1.Params) |  | params defines all the parameters of the module. |
 
 
 
@@ -403,6 +448,8 @@ DynamicFeeTx is the data of EIP-1559 dinamic fee transactions.
 
 ### LegacyTx
 LegacyTx is the transaction data of regular Ethereum transactions.
+NOTE: All non-protected transactions (i.e non EIP155 signed) will fail if the
+AllowUnprotectedTxs parameter is disabled.
 
 
 | Field | Type | Label | Description |
@@ -433,7 +480,7 @@ MsgEthereumTx encapsulates an Ethereum transaction as an SDK message.
 | `data` | [google.protobuf.Any](#google.protobuf.Any) |  | inner transaction data
 
 caches |
-| `size` | [double](#double) |  | encoded storage size of the transaction |
+| `size` | [double](#double) |  | DEPRECATED: encoded storage size of the transaction |
 | `hash` | [string](#string) |  | transaction hash in hex format |
 | `from` | [string](#string) |  | ethereum signer address in hex format. This address value is checked against the address derived from the signature (V, R, S) using the secp256k1 elliptic curve |
 
@@ -474,7 +521,7 @@ Msg defines the evm Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `EthereumTx` | [MsgEthereumTx](#ethermint.evm.v1.MsgEthereumTx) | [MsgEthereumTxResponse](#ethermint.evm.v1.MsgEthereumTxResponse) | EthereumTx defines a method submitting Ethereum transactions. | |
+| `EthereumTx` | [MsgEthereumTx](#ethermint.evm.v1.MsgEthereumTx) | [MsgEthereumTxResponse](#ethermint.evm.v1.MsgEthereumTxResponse) | EthereumTx defines a method submitting Ethereum transactions. | POST|/ethermint/evm/v1/ethereum_tx|
 
  <!-- end services -->
 
@@ -580,64 +627,26 @@ QueryBalanceResponse is the response type for the Query/Balance RPC method.
 
 
 
-<a name="ethermint.evm.v1.QueryBlockBloomRequest"></a>
+<a name="ethermint.evm.v1.QueryBaseFeeRequest"></a>
 
-### QueryBlockBloomRequest
-QueryBlockBloomRequest is the request type for the Query/BlockBloom RPC
-method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `height` | [int64](#int64) |  | height of the block which we want to query the bloom filter. Tendermint always replace the query request header by the current context header, height cannot be extracted from there, so we need to explicitly pass it in parameter. |
+### QueryBaseFeeRequest
+QueryBaseFeeRequest defines the request type for querying the EIP1559 base
+fee.
 
 
 
 
 
 
-<a name="ethermint.evm.v1.QueryBlockBloomResponse"></a>
+<a name="ethermint.evm.v1.QueryBaseFeeResponse"></a>
 
-### QueryBlockBloomResponse
-QueryBlockBloomResponse is the response type for the Query/BlockBloom RPC
-method.
+### QueryBaseFeeResponse
+BaseFeeResponse returns the EIP1559 base fee.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `bloom` | [bytes](#bytes) |  | bloom represents bloom filter for the given block hash. |
-
-
-
-
-
-
-<a name="ethermint.evm.v1.QueryBlockLogsRequest"></a>
-
-### QueryBlockLogsRequest
-QueryBlockLogsRequest is the request type for the Query/BlockLogs RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `hash` | [string](#string) |  | hash is the block hash to query the logs for. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="ethermint.evm.v1.QueryBlockLogsResponse"></a>
-
-### QueryBlockLogsResponse
-QueryTxLogs is the response type for the Query/BlockLogs RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `tx_logs` | [TransactionLogs](#ethermint.evm.v1.TransactionLogs) | repeated | logs represents the ethereum logs generated at the given block hash. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+| `base_fee` | [string](#string) |  |  |
 
 
 
@@ -734,37 +743,6 @@ QueryParamsResponse defines the response type for querying x/evm parameters.
 
 
 
-<a name="ethermint.evm.v1.QueryStaticCallRequest"></a>
-
-### QueryStaticCallRequest
-QueryStaticCallRequest defines static call request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address is the ethereum contract hex address to for static call. |
-| `input` | [bytes](#bytes) |  | static call input generated from abi |
-
-
-
-
-
-
-<a name="ethermint.evm.v1.QueryStaticCallResponse"></a>
-
-### QueryStaticCallResponse
-QueryStaticCallRequest defines static call response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `data` | [bytes](#bytes) |  |  |
-
-
-
-
-
-
 <a name="ethermint.evm.v1.QueryStorageRequest"></a>
 
 ### QueryStorageRequest
@@ -797,6 +775,75 @@ method.
 
 
 
+<a name="ethermint.evm.v1.QueryTraceBlockRequest"></a>
+
+### QueryTraceBlockRequest
+QueryTraceBlockRequest defines TraceTx request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `txs` | [MsgEthereumTx](#ethermint.evm.v1.MsgEthereumTx) | repeated | txs messages in the block |
+| `trace_config` | [TraceConfig](#ethermint.evm.v1.TraceConfig) |  | TraceConfig holds extra parameters to trace functions. |
+| `block_number` | [int64](#int64) |  | block number |
+| `block_hash` | [string](#string) |  | block hex hash |
+| `block_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | block time |
+
+
+
+
+
+
+<a name="ethermint.evm.v1.QueryTraceBlockResponse"></a>
+
+### QueryTraceBlockResponse
+QueryTraceBlockResponse defines TraceBlock response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `data` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="ethermint.evm.v1.QueryTraceTxRequest"></a>
+
+### QueryTraceTxRequest
+QueryTraceTxRequest defines TraceTx request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg` | [MsgEthereumTx](#ethermint.evm.v1.MsgEthereumTx) |  | msgEthereumTx for the requested transaction |
+| `trace_config` | [TraceConfig](#ethermint.evm.v1.TraceConfig) |  | TraceConfig holds extra parameters to trace functions. |
+| `predecessors` | [MsgEthereumTx](#ethermint.evm.v1.MsgEthereumTx) | repeated | the predecessor transactions included in the same block need to be replayed first to get correct context for tracing. |
+| `block_number` | [int64](#int64) |  | block number of requested transaction |
+| `block_hash` | [string](#string) |  | block hex hash of requested transaction |
+| `block_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | block time of requested transaction |
+
+
+
+
+
+
+<a name="ethermint.evm.v1.QueryTraceTxResponse"></a>
+
+### QueryTraceTxResponse
+QueryTraceTxResponse defines TraceTx response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `data` | [bytes](#bytes) |  | response serialized in bytes |
+
+
+
+
+
+
 <a name="ethermint.evm.v1.QueryTxLogsRequest"></a>
 
 ### QueryTxLogsRequest
@@ -806,6 +853,7 @@ QueryTxLogsRequest is the request type for the Query/TxLogs RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `hash` | [string](#string) |  | hash is the ethereum transaction hex hash to query the logs for. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
 
@@ -821,6 +869,7 @@ QueryTxLogs is the response type for the Query/TxLogs RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `logs` | [Log](#ethermint.evm.v1.Log) | repeated | logs represents the ethereum logs generated from the given transaction. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
 
@@ -880,13 +929,186 @@ Query defines the gRPC querier service.
 | `Balance` | [QueryBalanceRequest](#ethermint.evm.v1.QueryBalanceRequest) | [QueryBalanceResponse](#ethermint.evm.v1.QueryBalanceResponse) | Balance queries the balance of a the EVM denomination for a single EthAccount. | GET|/ethermint/evm/v1/balances/{address}|
 | `Storage` | [QueryStorageRequest](#ethermint.evm.v1.QueryStorageRequest) | [QueryStorageResponse](#ethermint.evm.v1.QueryStorageResponse) | Storage queries the balance of all coins for a single account. | GET|/ethermint/evm/v1/storage/{address}/{key}|
 | `Code` | [QueryCodeRequest](#ethermint.evm.v1.QueryCodeRequest) | [QueryCodeResponse](#ethermint.evm.v1.QueryCodeResponse) | Code queries the balance of all coins for a single account. | GET|/ethermint/evm/v1/codes/{address}|
-| `TxLogs` | [QueryTxLogsRequest](#ethermint.evm.v1.QueryTxLogsRequest) | [QueryTxLogsResponse](#ethermint.evm.v1.QueryTxLogsResponse) | TxLogs queries ethereum logs from a transaction. | GET|/ethermint/evm/v1/tx_logs/{hash}|
-| `BlockLogs` | [QueryBlockLogsRequest](#ethermint.evm.v1.QueryBlockLogsRequest) | [QueryBlockLogsResponse](#ethermint.evm.v1.QueryBlockLogsResponse) | BlockLogs queries all the ethereum logs for a given block hash. | GET|/ethermint/evm/v1/block_logs/{hash}|
-| `BlockBloom` | [QueryBlockBloomRequest](#ethermint.evm.v1.QueryBlockBloomRequest) | [QueryBlockBloomResponse](#ethermint.evm.v1.QueryBlockBloomResponse) | BlockBloom queries the block bloom filter bytes at a given height. | GET|/ethermint/evm/v1/block_bloom|
 | `Params` | [QueryParamsRequest](#ethermint.evm.v1.QueryParamsRequest) | [QueryParamsResponse](#ethermint.evm.v1.QueryParamsResponse) | Params queries the parameters of x/evm module. | GET|/ethermint/evm/v1/params|
-| `StaticCall` | [QueryStaticCallRequest](#ethermint.evm.v1.QueryStaticCallRequest) | [QueryStaticCallResponse](#ethermint.evm.v1.QueryStaticCallResponse) | StaticCall queries the static call value of x/evm module. | GET|/ethermint/evm/v1/static_call|
 | `EthCall` | [EthCallRequest](#ethermint.evm.v1.EthCallRequest) | [MsgEthereumTxResponse](#ethermint.evm.v1.MsgEthereumTxResponse) | EthCall implements the `eth_call` rpc api | GET|/ethermint/evm/v1/eth_call|
 | `EstimateGas` | [EthCallRequest](#ethermint.evm.v1.EthCallRequest) | [EstimateGasResponse](#ethermint.evm.v1.EstimateGasResponse) | EstimateGas implements the `eth_estimateGas` rpc api | GET|/ethermint/evm/v1/estimate_gas|
+| `TraceTx` | [QueryTraceTxRequest](#ethermint.evm.v1.QueryTraceTxRequest) | [QueryTraceTxResponse](#ethermint.evm.v1.QueryTraceTxResponse) | TraceTx implements the `debug_traceTransaction` rpc api | GET|/ethermint/evm/v1/trace_tx|
+| `TraceBlock` | [QueryTraceBlockRequest](#ethermint.evm.v1.QueryTraceBlockRequest) | [QueryTraceBlockResponse](#ethermint.evm.v1.QueryTraceBlockResponse) | TraceBlock implements the `debug_traceBlockByNumber` and `debug_traceBlockByHash` rpc api | GET|/ethermint/evm/v1/trace_block|
+| `BaseFee` | [QueryBaseFeeRequest](#ethermint.evm.v1.QueryBaseFeeRequest) | [QueryBaseFeeResponse](#ethermint.evm.v1.QueryBaseFeeResponse) | BaseFee queries the base fee of the parent block of the current block, it's similar to feemarket module's method, but also checks london hardfork status. | GET|/ethermint/evm/v1/base_fee|
+
+ <!-- end services -->
+
+
+
+<a name="ethermint/feemarket/v1/feemarket.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## ethermint/feemarket/v1/feemarket.proto
+
+
+
+<a name="ethermint.feemarket.v1.Params"></a>
+
+### Params
+Params defines the EVM module parameters
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `no_base_fee` | [bool](#bool) |  | no base fee forces the EIP-1559 base fee to 0 (needed for 0 price calls) |
+| `base_fee_change_denominator` | [uint32](#uint32) |  | base fee change denominator bounds the amount the base fee can change between blocks. |
+| `elasticity_multiplier` | [uint32](#uint32) |  | elasticity multiplier bounds the maximum gas limit an EIP-1559 block may have. |
+| `enable_height` | [int64](#int64) |  | height at which the base fee calculation is enabled. |
+| `base_fee` | [string](#string) |  | base fee for EIP-1559 blocks. |
+| `min_gas_price` | [string](#string) |  | min_gas_price defines the minimum gas price value for cosmos and eth transactions |
+| `min_gas_multiplier` | [string](#string) |  | min gas denominator bounds the minimum gasUsed to be charged to senders based on GasLimit |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="ethermint/feemarket/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## ethermint/feemarket/v1/genesis.proto
+
+
+
+<a name="ethermint.feemarket.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the feemarket module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#ethermint.feemarket.v1.Params) |  | params defines all the paramaters of the module. |
+| `block_gas` | [uint64](#uint64) |  | block gas is the amount of gas wanted on the last block before the upgrade. Zero by default. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="ethermint/feemarket/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## ethermint/feemarket/v1/query.proto
+
+
+
+<a name="ethermint.feemarket.v1.QueryBaseFeeRequest"></a>
+
+### QueryBaseFeeRequest
+QueryBaseFeeRequest defines the request type for querying the EIP1559 base
+fee.
+
+
+
+
+
+
+<a name="ethermint.feemarket.v1.QueryBaseFeeResponse"></a>
+
+### QueryBaseFeeResponse
+BaseFeeResponse returns the EIP1559 base fee.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `base_fee` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="ethermint.feemarket.v1.QueryBlockGasRequest"></a>
+
+### QueryBlockGasRequest
+QueryBlockGasRequest defines the request type for querying the EIP1559 base
+fee.
+
+
+
+
+
+
+<a name="ethermint.feemarket.v1.QueryBlockGasResponse"></a>
+
+### QueryBlockGasResponse
+QueryBlockGasResponse returns block gas used for a given height.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `gas` | [int64](#int64) |  |  |
+
+
+
+
+
+
+<a name="ethermint.feemarket.v1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest defines the request type for querying x/evm parameters.
+
+
+
+
+
+
+<a name="ethermint.feemarket.v1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse defines the response type for querying x/evm parameters.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#ethermint.feemarket.v1.Params) |  | params define the evm module parameters. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="ethermint.feemarket.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#ethermint.feemarket.v1.QueryParamsRequest) | [QueryParamsResponse](#ethermint.feemarket.v1.QueryParamsResponse) | Params queries the parameters of x/feemarket module. | GET|/ethermint/feemarket/v1/params|
+| `BaseFee` | [QueryBaseFeeRequest](#ethermint.feemarket.v1.QueryBaseFeeRequest) | [QueryBaseFeeResponse](#ethermint.feemarket.v1.QueryBaseFeeResponse) | BaseFee queries the base fee of the parent block of the current block. | GET|/ethermint/feemarket/v1/base_fee|
+| `BlockGas` | [QueryBlockGasRequest](#ethermint.feemarket.v1.QueryBlockGasRequest) | [QueryBlockGasResponse](#ethermint.feemarket.v1.QueryBlockGasResponse) | BlockGas queries the gas used at a given block height | GET|/ethermint/feemarket/v1/block_gas|
 
  <!-- end services -->
 
@@ -925,10 +1147,47 @@ authtypes.BaseAccount type. It is compatible with the auth AccountKeeper.
 
 
 
-<a name="ethermint/types/web3.proto"></a>
+<a name="ethermint/types/v1/indexer.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## ethermint/types/web3.proto
+## ethermint/types/v1/indexer.proto
+
+
+
+<a name="ethermint.types.v1.TxResult"></a>
+
+### TxResult
+TxResult is the value stored in eth tx indexer
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `height` | [int64](#int64) |  | the block height |
+| `tx_index` | [uint32](#uint32) |  | cosmos tx index |
+| `msg_index` | [uint32](#uint32) |  | the msg index in a batch tx |
+| `eth_tx_index` | [int32](#int32) |  | eth tx index, the index in the list of valid eth tx in the block, aka. the transaction list returned by eth_getBlock api. |
+| `failed` | [bool](#bool) |  | if the eth tx is failed |
+| `gas_used` | [uint64](#uint64) |  | gas used by tx, if exceeds block gas limit, it's set to gas limit which is what's actually deducted by ante handler. |
+| `cumulative_gas_used` | [uint64](#uint64) |  | the cumulative gas used within current batch tx |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="ethermint/types/v1/web3.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## ethermint/types/v1/web3.proto
 
 
 
@@ -940,9 +1199,9 @@ authtypes.BaseAccount type. It is compatible with the auth AccountKeeper.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `typedDataChainID` | [uint64](#uint64) |  | typedDataChainID used only in EIP712 Domain and should match Ethereum network ID in a Web3 provider (e.g. Metamask). |
-| `feePayer` | [string](#string) |  | feePayer is an account address for the fee payer. It will be validated during EIP712 signature checking. |
-| `feePayerSig` | [bytes](#bytes) |  | feePayerSig is a signature data from the fee paying account, allows to perform fee delegation when using EIP712 Domain. |
+| `typed_data_chain_id` | [uint64](#uint64) |  | typed data chain id used only in EIP712 Domain and should match Ethereum network ID in a Web3 provider (e.g. Metamask). |
+| `fee_payer` | [string](#string) |  | fee payer is an account address for the fee payer. It will be validated during EIP712 signature checking. |
+| `fee_payer_sig` | [bytes](#bytes) |  | fee payer sig is a signature data from the fee paying account, allows to perform fee delegation when using EIP712 Domain. |
 
 
 

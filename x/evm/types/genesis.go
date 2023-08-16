@@ -1,22 +1,17 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 
-	ethcmn "github.com/ethereum/go-ethereum/common"
-	treasurenet "github.com/treasurenet/types"
+	// ethermint "github.com/treasurenetprotocol/treasurenet/types"
+	ethermint "github.com/treasurenetprotocol/treasurenet/types"
 )
 
 // Validate performs a basic validation of a GenesisAccount fields.
 func (ga GenesisAccount) Validate() error {
-	if err := treasurenet.ValidateAddress(ga.Address); err != nil {
+	if err := ethermint.ValidateAddress(ga.Address); err != nil {
 		return err
 	}
-	if len(ethcmn.Hex2Bytes(ga.Code)) == 0 {
-		return errors.New("code cannot be empty")
-	}
-
 	return ga.Storage.Validate()
 }
 
@@ -25,8 +20,15 @@ func (ga GenesisAccount) Validate() error {
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		Accounts: []GenesisAccount{},
-		TxsLogs:  []TransactionLogs{},
 		Params:   DefaultParams(),
+	}
+}
+
+// NewGenesisState creates a new genesis state.
+func NewGenesisState(params Params, accounts []GenesisAccount) *GenesisState {
+	return &GenesisState{
+		Accounts: accounts,
+		Params:   params,
 	}
 }
 
@@ -34,7 +36,6 @@ func DefaultGenesisState() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	seenAccounts := make(map[string]bool)
-	seenTxs := make(map[string]bool)
 	for _, acc := range gs.Accounts {
 		if seenAccounts[acc.Address] {
 			return fmt.Errorf("duplicated genesis account %s", acc.Address)
@@ -43,18 +44,6 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("invalid genesis account %s: %w", acc.Address, err)
 		}
 		seenAccounts[acc.Address] = true
-	}
-
-	for _, tx := range gs.TxsLogs {
-		if seenTxs[tx.Hash] {
-			return fmt.Errorf("duplicated logs from transaction %s", tx.Hash)
-		}
-
-		if err := tx.Validate(); err != nil {
-			return fmt.Errorf("invalid logs from transaction %s: %w", tx.Hash, err)
-		}
-
-		seenTxs[tx.Hash] = true
 	}
 
 	return gs.Params.Validate()

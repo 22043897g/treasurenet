@@ -20,11 +20,12 @@ const (
 	// TODO: Justify our choice of default here.
 	DefaultUnbondingTime time.Duration = time.Hour * 24 * 7 * 3
 
+	// DefaultUnbondingTime time.Duration = time.Second * 5
 	// Default maximum number of bonded validators
-	DefaultMaxValidators uint32 = 100
+	DefaultMaxValidators uint32 = 400
 
 	// Default maximum entries in a UBD/RED pair
-	DefaultMaxEntries uint32 = 7
+	DefaultMaxEntries uint32 = 100
 
 	// DefaultHistorical entries is 10000. Apps that don't use IBC can ignore this
 	// value by not adding the staking module to the application module manager's
@@ -212,13 +213,13 @@ func validateBondDenom(i interface{}) error {
 }
 
 func validateTatTokens(i interface{}) error {
-	v, ok := i.(int64)
+	_, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	if v == 0 {
-		return fmt.Errorf("start block must be positive: %d", v)
-	}
+	// if v == 0 {
+	// 	return fmt.Errorf("start block must be positive: %d", v)
+	// }
 
 	return nil
 }

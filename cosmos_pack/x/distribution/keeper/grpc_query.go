@@ -43,8 +43,47 @@ func (k Keeper) ValidatorOutstandingRewards(c context.Context, req *types.QueryV
 		return nil, err
 	}
 	rewards := k.GetValidatorOutstandingRewards(ctx, valAdr)
-
+	fmt.Printf("distribution rewards is :%+v", rewards)
 	return &types.QueryValidatorOutstandingRewardsResponse{Rewards: rewards}, nil
+}
+
+// ValidatorAllOutstandingRewards queries rewards of a validator address
+// func (k Keeper) ValidatorAllOutstandingRewards(c context.Context) (*types.QueryValidatorOutstandingRewardsResponse, error) {
+// 	ctx := sdk.UnwrapSDKContext(c)
+
+// 	//validators := K.stakingKeeper.GetAllValidators(ctx)
+
+// 	var AllRewards types.ValidatorOutstandingRewards
+// 	validators := k.stakingKeeper.GetValidators(ctx, 200)
+
+// 	fmt.Printf("distribution validator is : %+v", validators)
+// 	for _, value := range validators {
+
+// 		valAdr, err := sdk.ValAddressFromBech32(value.OperatorAddress)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		rewards := k.GetValidatorOutstandingRewards(ctx, valAdr)
+// 		AllRewards.Rewards.Add(rewards.Rewards...)
+// 	}
+// 	return &types.QueryValidatorOutstandingRewardsResponse{Rewards: AllRewards}, nil
+// }
+func (k Keeper) ValidatorAllOutstandingRewards(c context.Context, req *types.QueryValidatorOutstandingRewardsRequest) (*types.QueryValidatorOutstandingRewardsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	//validators := K.stakingKeeper.GetAllValidators(ctx)
+
+	var AllRewards types.ValidatorOutstandingRewards
+
+	totalrewards := k.GetTotalRewards(ctx)
+
+	AllRewards.Rewards = totalrewards
+
+	return &types.QueryValidatorOutstandingRewardsResponse{Rewards: AllRewards}, nil
 }
 
 // ValidatorCommission queries accumulated commission for a validator

@@ -79,13 +79,13 @@ func TestRandomizedGenState1(t *testing.T) {
 		panicMsg string
 	}{
 		{ // panic => reason: incomplete initialization of the simState
-			module.SimulationState{}, "invalid memory address or nil pointer dereference"},
+			module.SimulationState{}, "invalid memory address or nil pointer dereference7"},
 		{ // panic => reason: incomplete initialization of the simState
 			module.SimulationState{
 				AppParams: make(simtypes.AppParams),
 				Cdc:       cdc,
 				Rand:      r,
-			}, "invalid memory address or nil pointer dereference"},
+			}, "invalid memory address or nil pointer dereference8"},
 		{
 			// panic => reason: numBonded != len(Accnounts)
 			module.SimulationState{
@@ -96,7 +96,7 @@ func TestRandomizedGenState1(t *testing.T) {
 				Accounts:     simtypes.RandomAccounts(r, 3),
 				InitialStake: 1000,
 				GenState:     make(map[string]json.RawMessage),
-			}, "invalid memory address or nil pointer dereference"},
+			}, "invalid memory address or nil pointer dereference9"},
 	}
 
 	for _, tt := range tests {

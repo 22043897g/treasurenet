@@ -6,6 +6,10 @@ package tx
 import (
 	context "context"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -16,9 +20,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -667,10 +668,14 @@ func NewServiceClient(cc grpc1.ClientConn) ServiceClient {
 
 func (c *serviceClient) Simulate(ctx context.Context, in *SimulateRequest, opts ...grpc.CallOption) (*SimulateResponse, error) {
 	out := new(SimulateResponse)
+	//fmt.Printf("out is:%+v\n", out)
+	//fmt.Printf("in is:%+v\n", in)
 	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/Simulate", in, out, opts...)
+	//fmt.Println("Simulate 测试")
 	if err != nil {
 		return nil, err
 	}
+	//fmt.Println("Simulate 测试2")
 	return out, nil
 }
 

@@ -17,13 +17,15 @@ func (k Keeper) AllocateTokens(
 	ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
 	previousProposer sdk.ConsAddress, bondedVotes []abci.VoteInfo,
 ) {
-
+	votetatnum := int64(0)
 	logger := k.Logger(ctx)
 
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
 	feeCollector := k.authKeeper.GetModuleAccount(ctx, k.feeCollectorName)
+	// fmt.Println("feeCollectorName:", k.feeCollectorName)
+	// fmt.Println("feeCollector:", feeCollector)
 	feesCollectedInt := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
 	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
 	// transfer collected fees to the distribution module account
@@ -44,20 +46,18 @@ func (k Keeper) AllocateTokens(
 	// calculate fraction votes  sumPreviousPrecommitPower   totalPreviousPower->Count the total voting weight through lastcommitinfo
 	previousFractionVotes := sdk.NewDec(sumPreviousPrecommitPower).Quo(sdk.NewDec(totalPreviousPower))
 	// calculate previous proposer reward
-	baseProposerReward := k.GetBaseProposerReward(ctx)   //Proposer rate block proponents receive a fixed proportion of the current block reward as the basic reward. The default value is% 1 (set to% 30 according to project requirements)
-	bonusProposerReward := k.GetBonusProposerReward(ctx) //Current payout proposer reward rate     Additional incentives for block proponents --> When all active verifiers vote and all votes are packaged into blocks, the maximum proportion of additional rewards that block proponents can receive is% 4 by default
-	//proposermutiplierThis value is used to calculate the additional reward. The basic reward proportion of the block proponent is fixed, but the additional reward proportion is floating. This method is to calculate the sum of the proportion of the two rewards
-	//proposerMultiplier = baseProposerReward+bonusProposerReward*（sumPrecommitPower/totalPower）sumPrecommitPower/totalPower  这个值就是previousFractionVotes
+	baseProposerReward := k.GetBaseProposerReward(ctx)   // Proposer rate block proponents receive a fixed proportion of the current block reward as the basic reward. The default value is% 1 (set to% 30 according to project requirements)
+	bonusProposerReward := k.GetBonusProposerReward(ctx) // Current payout proposer reward rate     Additional incentives for block proponents --> When all active verifiers vote and all votes are packaged into blocks, the maximum proportion of additional rewards that block proponents can receive is% 4 by default
+	// proposermutiplierThis value is used to calculate the additional reward. The basic reward proportion of the block proponent is fixed, but the additional reward proportion is floating. This method is to calculate the sum of the proportion of the two rewards
+	// proposerMultiplier = baseProposerReward+bonusProposerReward*（sumPrecommitPower/totalPower）sumPrecommitPower/totalPower  这个值就是previousFractionVotes
 	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.MulTruncate(previousFractionVotes))
-	//Modify the proposer's reward proportion. This block reward * proposer's reward proportion (30%)
-	//proposerMultiplier
-	//NewproposerReward := feesCollected.MulDecTruncate(0.300000000000000000)
+	// Modify the proposer's reward proportion. This block reward * proposer's reward proportion (30%)
+	// proposerMultiplier
+	// NewproposerReward := feesCollected.MulDecTruncate(0.300000000000000000)
 	proposerReward := feesCollected.MulDecTruncate(proposerMultiplier)
-	fmt.Println("proposerReward:", proposerReward)
 	// pay previous proposer
 	remaining := feesCollected
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, previousProposer)
-	//fmt.Println("proposerValidator:", proposerValidator)
 	if proposerValidator != nil {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -84,18 +84,16 @@ func (k Keeper) AllocateTokens(
 	}
 
 	// calculate fraction allocated to validators
-	communityTax := k.GetCommunityTax(ctx) //Community tax
-	tatReward := k.GetTatReward(ctx)       //Tat reward rate
-	fmt.Println("tatReward:", tatReward)
-	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax).Sub(tatReward)
-	fmt.Println("voteMultiplier:", voteMultiplier)
+	communityTax := k.GetCommunityTax(ctx) // Community tax
+	tatReward := k.GetTatReward(ctx)       // Tat reward rate
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
+	var voteMultiplier sdk.Dec
 	var tattotalpower int64
 	var newunitallpower int64
 	var alltokenpower int64
 	powerReduction := k.stakingKeeper.GetPowerReduction(ctx)
-	//Tat reward allocation
+	// Tat reward allocation
 	for _, vote := range bondedVotes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 		TatPower := validator.GetTatPower()
@@ -106,62 +104,61 @@ func (k Keeper) AllocateTokens(
 		tattotalpower += newtatpower
 		newunitallpower += NewUnitPower2
 		alltokenpower += TokenPower
+		if newtatpower != int64(0) {
+			votetatnum++
+		}
 	}
-	fmt.Println("tattotalpower：", tattotalpower)
-	fmt.Println("alltokenpower：", alltokenpower)
+	var votetatnumFraction sdk.Dec
 	if tattotalpower != int64(0) {
 		for _, vote := range bondedVotes {
 			validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
-			//Get the total amount of tatpower
-			//params := k.stakingKeeper.GetParams(ctx)
+			// Get the total amount of tatpower
+			// params := k.stakingKeeper.GetParams(ctx)
 			TatPower := validator.GetTatPower()
 			newtatpower := TatPower.Int64()
 			// TODO consider microslashing for missing votes.
 			// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 			tatpowerFraction := sdk.NewDec(newtatpower).QuoTruncate(sdk.NewDec(tattotalpower))
-			fmt.Printf("tatpowerFraction:%+v\n", tatpowerFraction)
-			tatreward := feesCollected.MulDecTruncate(tatReward).MulDecTruncate(tatpowerFraction)
-			fmt.Printf("reward:%+v\n", tatreward)
-			//k.AllocateTokensToValidator(ctx, validator, tatreward)
+			votetatnumFraction = sdk.NewDec(votetatnum).QuoTruncate(sdk.NewDec(int64(len(bondedVotes))))
+			tatreward := feesCollected.MulDecTruncate(tatReward).MulDecTruncate(tatpowerFraction).MulDecTruncate(votetatnumFraction)
+			// k.AllocateTokensToValidator(ctx, validator, tatreward)
 			k.AllocateTokensToValidatorTat(ctx, validator, tatreward)
 			remaining = remaining.Sub(tatreward)
 		}
-	}
-	fmt.Println("newunitallpower：", newunitallpower)
-	//Get the previous totalPreviousPower
-	//totalallpower := k.stakingKeeper.GetTotalAllPower(ctx)
-	//k.stakingKeeper.SetTotalAllPower(ctx, totalPreviousPower)
-	if totalPreviousPower == alltokenpower {
-		for _, vote := range bondedVotes {
-			validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
-			fmt.Println("voteMultiplier:", voteMultiplier)
-			// TODO consider microslashing for missing votes.
-			// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-			fmt.Println("vote.Validator.Power:", vote.Validator.Power)
-			powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
-			fmt.Printf("powerFraction:%+v\n", powerFraction)
-			reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
-			fmt.Printf("reward:%+v\n", reward)
-			k.AllocateTokensToValidator(ctx, validator, reward)
-			remaining = remaining.Sub(reward)
-		}
+		voteMultiplier = sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax).Sub(tatReward.MulTruncate(votetatnumFraction))
 	} else {
-		for _, vote := range bondedVotes {
-			validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
-			fmt.Println("voteMultiplier:", voteMultiplier)
-			// TODO consider microslashing for missing votes.
-			// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-			//To calculate the reward of stacking, you need to discard the pledge of unit to isolate stacking and bid from each other
-			newunit := validator.GetNewUnitPower().Int64()
-			newpower := vote.Validator.Power - newunit
-			newtotalPreviousPower := totalPreviousPower - newunitallpower
-			//powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
-			powerFraction := sdk.NewDec(newpower).QuoTruncate(sdk.NewDec(newtotalPreviousPower))
-			reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
-			k.AllocateTokensToValidator(ctx, validator, reward)
-			remaining = remaining.Sub(reward)
-		}
+		voteMultiplier = sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
 	}
+	// Get the previous totalPreviousPower
+	// totalallpower := k.stakingKeeper.GetTotalAllPower(ctx)
+	// k.stakingKeeper.SetTotalAllPower(ctx, totalPreviousPower)
+	// if totalPreviousPower == alltokenpower {
+	for _, vote := range bondedVotes {
+		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+		// TODO consider microslashing for missing votes.
+		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
+		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
+		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
+		k.AllocateTokensToValidator(ctx, validator, reward)
+		remaining = remaining.Sub(reward)
+	}
+	// } else {
+	// 	for _, vote := range bondedVotes {
+	// 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+	// 		fmt.Println("voteMultiplier:", voteMultiplier)
+	// 		// TODO consider microslashing for missing votes.
+	// 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
+	// 		//To calculate the reward of stacking, you need to discard the pledge of unit to isolate stacking and bid from each other
+	// 		newunit := validator.GetNewUnitPower().Int64()
+	// 		newpower := vote.Validator.Power - newunit
+	// 		newtotalPreviousPower := totalPreviousPower - newunitallpower
+	// 		//powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
+	// 		powerFraction := sdk.NewDec(newpower).QuoTruncate(sdk.NewDec(newtotalPreviousPower))
+	// 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
+	// 		k.AllocateTokensToValidator(ctx, validator, reward)
+	// 		remaining = remaining.Sub(reward)
+	// 	}
+	// }
 	// allocate community funding
 	feePool.CommunityPool = feePool.CommunityPool.Add(remaining...)
 	k.SetFeePool(ctx, feePool)

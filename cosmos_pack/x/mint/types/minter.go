@@ -73,7 +73,7 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
 	return inflation
 }
 
-//获取TAT占比
+// 获取TAT占比
 func (m Minter) NextProbabilityRate(params Params) sdk.Dec {
 	probability := params.Probability
 	return probability
@@ -85,7 +85,7 @@ func (m Minter) NextAnnualProvisions(_ Params, totalSupply sdk.Int) sdk.Dec {
 	return m.Inflation.MulInt(totalSupply)
 }
 
-//计算unit的新的产量
+// 计算unit的新的产量
 func (m Minter) NewNextAnnualProvisions(_ Params, totalSupply sdk.Int) sdk.Dec {
 	return m.TatProbability.MulInt(totalSupply)
 }
@@ -97,7 +97,7 @@ func (m Minter) BlockProvision(params Params) sdk.Coin {
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }
 
-// BlockProvision returns the provisions for a block based on the annual 新的根据年度返回区块的规定
+// BlockProvision returns the provisions for a block based on the annual
 func (m Minter) NewBlockProvision(params Params, newnumber uint64) sdk.Coin {
 	provisionAmt := m.NewAnnualProvisions.QuoInt(sdk.NewInt(int64(newnumber)))
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())

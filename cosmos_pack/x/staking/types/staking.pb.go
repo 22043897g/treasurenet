@@ -343,6 +343,8 @@ type Validator struct {
 	TatPower github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,14,opt,name=tat_power,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tat_power"`
 	// tatpower define the delegated tokens (incl. self-delegation).
 	NewUnitPower github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,15,opt,name=newunit_power,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"newunit_power"`
+	// Tokens_shares defines total shares issued to a validator's toekns.
+	TokensShares github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,16,opt,name=tokens_shares,json=tokensShares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"tokens_shares" yaml:"tokens_shares"`
 }
 
 func (m *Validator) Reset()      { *m = Validator{} }

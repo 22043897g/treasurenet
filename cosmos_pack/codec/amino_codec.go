@@ -107,6 +107,7 @@ func (ac *AminoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 // NOTE: to marshal a concrete type, you should use MarshalJSON instead
 func (ac *AminoCodec) MarshalInterfaceJSON(i proto.Message) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
+		//fmt.Println("序列化测试")
 		return nil, err
 	}
 	return ac.LegacyAmino.MarshalJSON(i)

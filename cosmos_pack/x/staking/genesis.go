@@ -35,14 +35,15 @@ func InitGenesis(
 	keeper.SetParams(ctx, data.Params)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 	keeper.SetLastTotalPower(ctx, data.LastTatTotalPower)
-	//fmt.Printf("data.Validators:%v\n", data.Validators)
+	// fmt.Printf("data.Validators:%v\n", data.Validators)
 	for _, validator := range data.Validators {
+		keeper.SetValidator(ctx, validator)
+
 		// Manually set indices for the first time
 		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator)
 		keeper.SetNewValidatorByPowerIndex(ctx, validator)
-		//fmt.Println("测试循序tatffffffffffffffffffffffffffffffffffffffffffffffff")
-		//keeper.SetNewValidatorByPowerIndex(ctx, validator)
+		// keeper.SetNewValidatorByPowerIndex(ctx, validator)
 		// Call the creation hook if not exported
 		if !data.Exported {
 			keeper.AfterValidatorCreated(ctx, validator.GetOperator())
@@ -132,6 +133,8 @@ func InitGenesis(
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
 			valAddr, err := sdk.ValAddressFromBech32(lv.Address)
+			fmt.Printf("data.Exported GetValidator lv:%+v\n", lv)
+			fmt.Println("data.Exported GetValidator lv.Address:", lv.Address)
 			if err != nil {
 				panic(err)
 			}

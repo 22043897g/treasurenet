@@ -3,15 +3,15 @@ package types
 import (
 	"math/big"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/treasurenet/types"
+	// "github.com/treasurenetprotocol/treasurenet/types"
+	"github.com/treasurenetprotocol/treasurenet/types"
 )
 
-func newLegacyTx(tx *ethtypes.Transaction) *LegacyTx {
+func newLegacyTx(tx *ethtypes.Transaction) (*LegacyTx, error) {
 	txData := &LegacyTx{
 		Nonce:    tx.Nonce(),
 		Data:     tx.Data(),
@@ -19,22 +19,28 @@ func newLegacyTx(tx *ethtypes.Transaction) *LegacyTx {
 	}
 
 	v, r, s := tx.RawSignatureValues()
-	if tx.To() != nil {
-		txData.To = tx.To().Hex()
+	if to := tx.To(); to != nil {
+		txData.To = to.Hex()
 	}
 
 	if tx.Value() != nil {
-		amountInt := sdk.NewIntFromBigInt(tx.Value())
+		amountInt, err := types.SafeNewIntFromBigInt(tx.Value())
+		if err != nil {
+			return nil, err
+		}
 		txData.Amount = &amountInt
 	}
 
 	if tx.GasPrice() != nil {
-		gasPriceInt := sdk.NewIntFromBigInt(tx.GasPrice())
+		gasPriceInt, err := types.SafeNewIntFromBigInt(tx.GasPrice())
+		if err != nil {
+			return nil, err
+		}
 		txData.GasPrice = &gasPriceInt
 	}
 
 	txData.SetSignatureValues(tx.ChainId(), v, r, s)
-	return txData
+	return txData, nil
 }
 
 // TxType returns the tx type
@@ -156,17 +162,26 @@ func (tx *LegacyTx) SetSignatureValues(_, v, r, s *big.Int) {
 func (tx LegacyTx) Validate() error {
 	gasPrice := tx.GetGasPrice()
 	if gasPrice == nil {
-		return sdkerrors.Wrap(ErrInvalidGasPrice, "cannot be nil")
+		return sdkerrors.Wrap(ErrInvalidGasPrice, "gas price cannot be nil")
 	}
 
 	if gasPrice.Sign() == -1 {
 		return sdkerrors.Wrapf(ErrInvalidGasPrice, "gas price cannot be negative %s", gasPrice)
+	}
+	if !types.IsValidInt256(gasPrice) {
+		return sdkerrors.Wrap(ErrInvalidGasPrice, "out of bound")
+	}
+	if !types.IsValidInt256(tx.Fee()) {
+		return sdkerrors.Wrap(ErrInvalidGasFee, "out of bound")
 	}
 
 	amount := tx.GetValue()
 	// Amount can be 0
 	if amount != nil && amount.Sign() == -1 {
 		return sdkerrors.Wrapf(ErrInvalidAmount, "amount cannot be negative %s", amount)
+	}
+	if !types.IsValidInt256(amount) {
+		return sdkerrors.Wrap(ErrInvalidAmount, "out of bound")
 	}
 
 	if tx.To != "" {
@@ -186,4 +201,14 @@ func (tx LegacyTx) Fee() *big.Int {
 // Cost returns amount + gasprice * gaslimit.
 func (tx LegacyTx) Cost() *big.Int {
 	return cost(tx.Fee(), tx.GetValue())
+}
+
+// EffectiveFee is the same as Fee for LegacyTx
+func (tx LegacyTx) EffectiveFee(baseFee *big.Int) *big.Int {
+	return tx.Fee()
+}
+
+// EffectiveCost is the same as Cost for LegacyTx
+func (tx LegacyTx) EffectiveCost(baseFee *big.Int) *big.Int {
+	return tx.Cost()
 }

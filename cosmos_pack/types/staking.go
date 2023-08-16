@@ -4,7 +4,7 @@ package types
 const (
 
 	// default bond denomination
-	DefaultBondDenom = "stake"
+	DefaultBondDenom = "aunit"
 
 	// Delay, in blocks, between when validator updates are returned to the
 	// consensus-engine and when they are applied. For example, if
@@ -19,10 +19,10 @@ const (
 )
 
 // DefaultPowerReduction is the default amount of staking tokens required for 1 unit of consensus-engine power
-var DefaultPowerReduction = NewIntFromUint64(1000000000000)
+var DefaultPowerReduction = NewIntFromUint64(1000000000000000000)
 
 //重新设置1 单位共识引擎功率所需的默认代币数量来对validator进行新的排序，从而影响pos
-var DefaultPowerReduction2 = NewIntFromUint64(1000000000000)
+var DefaultPowerReduction2 = NewIntFromUint64(1000000000000000000)
 
 // TokensToConsensusPower - convert input tokens to potential consensus-engine power
 func TokensToConsensusPower(tokens Int, powerReduction Int) int64 {

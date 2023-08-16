@@ -6,10 +6,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	"github.com/treasurenet/crypto/ethsecp256k1"
-	"github.com/treasurenet/x/evm"
-	"github.com/treasurenet/x/evm/types"
+	"github.com/treasurenetprotocol/treasurenet/crypto/ethsecp256k1"
+	"github.com/treasurenetprotocol/treasurenet/x/evm"
+	"github.com/treasurenetprotocol/treasurenet/x/evm/statedb"
+	"github.com/treasurenetprotocol/treasurenet/x/evm/types"
 )
 
 func (suite *EvmTestSuite) TestInitGenesis() {
@@ -17,6 +17,8 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 	suite.Require().NoError(err)
 
 	address := common.HexToAddress(privkey.PubKey().Address().String())
+
+	var vmdb *statedb.StateDB
 
 	testCases := []struct {
 		name     string
@@ -33,11 +35,7 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 		{
 			"valid account",
 			func() {
-				acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, address.Bytes())
-				suite.Require().NotNil(acc)
-
-				suite.app.EvmKeeper.AddBalance(address, big.NewInt(1))
-				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+				vmdb.AddBalance(address, big.NewInt(1))
 			},
 			&types.GenesisState{
 				Params: types.DefaultParams(),
@@ -81,13 +79,32 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 			},
 			true,
 		},
+		{
+			"invalid code hash",
+			func() {
+				acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, address.Bytes())
+				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+			},
+			&types.GenesisState{
+				Params: types.DefaultParams(),
+				Accounts: []types.GenesisAccount{
+					{
+						Address: address.String(),
+						Code:    "ffffffff",
+					},
+				},
+			},
+			true,
+		},
 	}
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset values
+			vmdb = suite.StateDB()
 
 			tc.malleate()
+			vmdb.Commit()
 
 			if tc.expPanic {
 				suite.Require().Panics(

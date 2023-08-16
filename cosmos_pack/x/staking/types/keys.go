@@ -35,10 +35,11 @@ var (
 	LastValidatorUnitPowerKey = []byte{0x15} // prefix for each key to a validator index, for bonded validators unit
 	LastUnitTotalPowerKey     = []byte{0x16} // prefix for the unit total power
 
-	ValidatorsKey                = []byte{0x21} // prefix for each key to a validator
-	ValidatorsByConsAddrKey      = []byte{0x22} // prefix for each key to a validator index, by pubkey
-	ValidatorsByPowerIndexKey    = []byte{0x23} // prefix for each key to a validator index, sorted by power
-	ValidatorsByNewPowerIndexKey = []byte{0x24} // prefix for each key to a validator index, sorted by newpower
+	ValidatorsKey                    = []byte{0x21} // prefix for each key to a validator
+	ValidatorsByConsAddrKey          = []byte{0x22} // prefix for each key to a validator index, by pubkey
+	ValidatorsByPowerIndexKey        = []byte{0x23} // prefix for each key to a validator index, sorted by power
+	ValidatorsByNewPowerIndexKey     = []byte{0x24} // prefix for each key to a validator index, sorted by newpower
+	ValidatorsByNewUnitPowerIndexKey = []byte{0x25} // prefix for each key to a validator index, sorted by newUnitpower
 
 	DelegationKey                    = []byte{0x31} // key for a delegation
 	UnbondingDelegationKey           = []byte{0x32} // key for an unbonding-delegation
@@ -97,6 +98,7 @@ func AddressFromLastValidatorPowerKey(key []byte) []byte {
 // Power index is the key used in the power-store, and represents the relative
 // power ranking of the validator.
 // VALUE: validator operator address ([]byte)
+// 通过验证者的投票权重和验证者地址验证者地址组成一个索引值，方便后面按照投票权重的高低次序遍历所有活跃验证者
 func GetValidatorsByPowerIndexKey(validator Validator, powerReduction sdk.Int) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
 	// NOTE the larger values are of higher value
@@ -112,7 +114,7 @@ func GetValidatorsByPowerIndexKey(validator Validator, powerReduction sdk.Int) [
 	operAddrInvr := sdk.CopyBytes(addr)
 	// rss, _ := json.Marshal(operAddrInvr)
 	// fmt.Printf("operAddrInvr:%+v\n", string(rss))
-	//fmt.Println("operAddrInvr:\n", string(operAddrInvr))
+	// fmt.Println("operAddrInvr:\n", string(operAddrInvr))
 	addrLen := len(operAddrInvr)
 
 	for i, b := range operAddrInvr {
@@ -137,24 +139,25 @@ func GetValidatorsByPowerIndexKey(validator Validator, powerReduction sdk.Int) [
 func GetValidatorsByNewPowerIndexKey(validator Validator, powerReduction sdk.Int) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
 	// NOTE the larger values are of higher value
-	//fmt.Printf("powerReduction:%+v\n", powerReduction)
-	consensusPower := sdk.TokensToConsensusPower(validator.TatTokens, powerReduction)
-	//fmt.Printf("consensusPower:%+v\n", consensusPower)
+	// fmt.Printf("powerReduction:%+v\n", powerReduction)
+	// consensusPower := sdk.TokensToConsensusPower(validator.TatTokens, powerReduction)
+	consensusPower := sdk.TokensToConsensusPower(validator.Tokens, powerReduction)
+	// fmt.Printf("consensusPower:%+v\n", consensusPower)
 	consensusPowerBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(consensusPowerBytes, uint64(consensusPower))
 
 	powerBytes := consensusPowerBytes
 	powerBytesLen := len(powerBytes) // 8
-	//fmt.Printf("powerBytes:%+v\n", powerBytes)
+	// fmt.Printf("powerBytes:%+v\n", powerBytes)
 	addr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
-	//fmt.Printf("addr:%+v\n", addr)
+	// fmt.Printf("addr:%+v\n", addr)
 	if err != nil {
 		panic(err)
 	}
 	operAddrInvr := sdk.CopyBytes(addr)
 	// rss, _ := json.Marshal(operAddrInvr)
 	// fmt.Printf("operAddrInvr:%+v\n", string(rss))
-	//fmt.Println("operAddrInvr:\n", string(operAddrInvr))
+	// fmt.Println("operAddrInvr:\n", string(operAddrInvr))
 	addrLen := len(operAddrInvr)
 
 	for i, b := range operAddrInvr {
@@ -164,6 +167,83 @@ func GetValidatorsByNewPowerIndexKey(validator Validator, powerReduction sdk.Int
 	// key is of format prefix || powerbytes || addrLen (1byte) || addrBytes
 	key := make([]byte, 1+powerBytesLen+1+addrLen)
 	key[0] = ValidatorsByNewPowerIndexKey[0]
+	copy(key[1:powerBytesLen+1], powerBytes)
+	key[powerBytesLen+1] = byte(addrLen)
+	copy(key[powerBytesLen+2:], operAddrInvr)
+	// res, _ := json.Marshal(key)
+	// fmt.Println("key:", string(res))
+	return key
+}
+
+func GetValidatorsByNewPowerTatIndexKey(validator Validator, powerReduction sdk.Int) []byte {
+	// NOTE the address doesn't need to be stored because counter bytes must always be different
+	// NOTE the larger values are of higher value
+	// fmt.Printf("powerReduction:%+v\n", powerReduction)
+	consensusPower := sdk.TokensToConsensusPower(validator.TatTokens, powerReduction)
+	// consensusPower := sdk.TokensToConsensusPower(validator.Tokens, powerReduction)
+	// fmt.Printf("consensusPower:%+v\n", consensusPower)
+	consensusPowerBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(consensusPowerBytes, uint64(consensusPower))
+
+	powerBytes := consensusPowerBytes
+	powerBytesLen := len(powerBytes) // 8
+	// fmt.Printf("powerBytes:%+v\n", powerBytes)
+	addr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+	// fmt.Printf("addr:%+v\n", addr)
+	if err != nil {
+		panic(err)
+	}
+	operAddrInvr := sdk.CopyBytes(addr)
+	// rss, _ := json.Marshal(operAddrInvr)
+	// fmt.Printf("operAddrInvr:%+v\n", string(rss))
+	// fmt.Println("operAddrInvr:\n", string(operAddrInvr))
+	addrLen := len(operAddrInvr)
+
+	for i, b := range operAddrInvr {
+		operAddrInvr[i] = ^b
+	}
+
+	// key is of format prefix || powerbytes || addrLen (1byte) || addrBytes
+	key := make([]byte, 1+powerBytesLen+1+addrLen)
+	key[0] = ValidatorsByNewPowerIndexKey[0]
+	copy(key[1:powerBytesLen+1], powerBytes)
+	key[powerBytesLen+1] = byte(addrLen)
+	copy(key[powerBytesLen+2:], operAddrInvr)
+	// res, _ := json.Marshal(key)
+	// fmt.Println("key:", string(res))
+	return key
+}
+
+// GetValidatorsByPowerIndexKey creates the validator by power index.
+// Power index is the key used in the power-store, and represents the relative
+// power ranking of the validator.
+// VALUE: validator operator address ([]byte)
+// Generate a new iterator through two rounds of filtering
+func GetValidatorsByNewUnitPowerIndexKey(validator Validator, powerReduction sdk.Int) []byte {
+	// NOTE the address doesn't need to be stored because counter bytes must always be different
+	// NOTE the larger values are of higher value
+	consensusPower := sdk.TokensToConsensusPower(validator.Tokens, powerReduction)
+	consensusPowerBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(consensusPowerBytes, uint64(consensusPower))
+	powerBytes := consensusPowerBytes
+	powerBytesLen := len(powerBytes) // 8
+	addr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	operAddrInvr := sdk.CopyBytes(addr)
+	// rss, _ := json.Marshal(operAddrInvr)
+	// fmt.Printf("operAddrInvr:%+v\n", string(rss))
+	// fmt.Println("operAddrInvr:\n", string(operAddrInvr))
+	addrLen := len(operAddrInvr)
+
+	for i, b := range operAddrInvr {
+		operAddrInvr[i] = ^b
+	}
+
+	// key is of format prefix || powerbytes || addrLen (1byte) || addrBytes
+	key := make([]byte, 1+powerBytesLen+1+addrLen)
+	key[0] = ValidatorsByNewUnitPowerIndexKey[0]
 	copy(key[1:powerBytesLen+1], powerBytes)
 	key[powerBytesLen+1] = byte(addrLen)
 	copy(key[powerBytesLen+2:], operAddrInvr)

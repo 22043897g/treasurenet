@@ -75,7 +75,7 @@ func (app *Application) CheckTx(req types.RequestCheckTx) types.ResponseCheckTx 
 		if txValue < uint64(app.txCount) {
 			return types.ResponseCheckTx{
 				Code: code.CodeTypeBadNonce,
-				Log:  fmt.Sprintf("Invalid nonce. Expected >= %v, got %v", app.txCount, txValue)}
+				Log:  fmt.Sprintf("Invalid nonce1. Expected >= %v, got %v", app.txCount, txValue)}
 		}
 	}
 	return types.ResponseCheckTx{Code: code.CodeTypeOK}

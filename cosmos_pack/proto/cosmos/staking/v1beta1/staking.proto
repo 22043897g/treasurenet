@@ -117,6 +117,20 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
+ // tattokens define the delegated tokens (incl. self-delegation).
+ string tattokens = 12 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+ // newtokens define the delegated tokens (incl. self-delegation).
+ string newtokens = 13 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+ // tatpower define the delegated tokens (incl. self-delegation).
+ string tatpower = 14 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+ // newunitpower define the delegated tokens (incl. self-delegation).
+ string new_unit_power = 15 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+ // tokens_shares defines defines total shares issued to a validator's token.
+ string tokens_shares = 16 [
+  (gogoproto.moretags)   = "yaml:\"tokens_shares\"",
+  (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+  (gogoproto.nullable)   = false
+];
 }
 
 // BondStatus is the status of a validator.

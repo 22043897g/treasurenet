@@ -20,7 +20,9 @@ type State struct {
 	Hash   []byte
 
 	// private fields aren't marshalled to disk.
-	file            string
+	file string
+	// app saves current and previous state for rollback functionality
+	previousFile    string
 	persistInterval uint64
 	initialHeight   uint64
 }
@@ -134,6 +136,18 @@ func (s *State) Commit() (uint64, []byte, error) {
 		}
 	}
 	return s.Height, s.Hash, nil
+}
+
+func (s *State) Rollback() error {
+	bz, err := ioutil.ReadFile(s.previousFile)
+	if err != nil {
+		return fmt.Errorf("failed to read state from %q: %w", s.previousFile, err)
+	}
+	err = json.Unmarshal(bz, s)
+	if err != nil {
+		return fmt.Errorf("invalid state data in %q: %w", s.previousFile, err)
+	}
+	return nil
 }
 
 // hashItems hashes a set of key/value items.

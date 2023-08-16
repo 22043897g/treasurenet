@@ -13,7 +13,7 @@ services:
       - ID=0
       - LOG=${LOG:-treasurenetd.log}
     volumes:
-      - /data/localnet-setup/node0/treasurenetd:/treasurenet:Z
+      - ./localnet-setup/node0/treasurenetd:/treasurenet:Z
     networks:
       - localnet
     entrypoint: "bash start-docker.sh"
@@ -30,7 +30,7 @@ services:
       - ID=1
       - LOG=${LOG:-treasurenetd.log}
     volumes:
-      - /data/localnet-setup/node1/treasurenetd:/treasurenet:Z
+      - ./localnet-setup/node1/treasurenetd:/treasurenet:Z
     networks:
       - localnet
     entrypoint: "bash start-docker.sh"
@@ -47,7 +47,7 @@ services:
       - "8566:8546"
       - "8127:8125"
     volumes:
-      - /data/localnet-setup/node2/treasurenetd:/treasurenet:Z
+      - ./localnet-setup/node2/treasurenetd:/treasurenet:Z
     networks:
       - localnet
     entrypoint: "bash start-docker.sh"
@@ -64,75 +64,7 @@ services:
       - "8576:8546"
       - "8128:8125"
     volumes:
-      - /data/localnet-setup/node3/treasurenetd:/treasurenet:Z
-    networks:
-      - localnet
-    entrypoint: "bash start-docker.sh"
-
-  treasurenetdnode4:
-    container_name: treasurenetdnode4
-    image: "treasurenetd/node"
-    ports:
-      - "26661:26657"
-      - "8585:8545"
-      - "8586:8546"
-      - "8129:8125"
-    environment:
-      - ID=4
-      - LOG=${LOG:-treasurenetd.log}
-    volumes:
-      - /data/localnet-setup/node4/treasurenetd:/treasurenet:Z
-    networks:
-      - localnet
-    entrypoint: "bash start-docker.sh"
-
-  treasurenetdnode5:
-    container_name: treasurenetdnode5
-    image: "treasurenetd/node"
-    ports:
-      - "26662:26657"
-      - "8595:8545"
-      - "8596:8546"
-      - "8130:8125"
-    environment:
-      - ID=5
-      - LOG=${LOG:-treasurenetd.log}
-    volumes:
-      - /data/localnet-setup/node5/treasurenetd:/treasurenet:Z
-    networks:
-      - localnet
-    entrypoint: "bash start-docker.sh"
-
-  treasurenetdnode6:
-    container_name: treasurenetdnode6
-    image: "treasurenetd/node"
-    environment:
-      - ID=6
-      - LOG=${LOG:-treasurenetd.log}
-    ports:
-      - "26663:26657"
-      - "8605:8545"
-      - "8606:8546"
-      - "8131:8125"
-    volumes:
-      - /data/localnet-setup/node6/treasurenetd:/treasurenet:Z
-    networks:
-      - localnet
-    entrypoint: "bash start-docker.sh"
-
-  treasurenetdnode7:
-    container_name: treasurenetdnode7
-    image: "treasurenetd/node"
-    environment:
-      - ID=7
-      - LOG=${LOG:-treasurenetd.log}
-    ports:
-      - "26664:26657"
-      - "8615:8545"
-      - "8616:8546"
-      - "8132:8125"
-    volumes:
-      - /data/localnet-setup/node7/treasurenetd:/treasurenet:Z
+      - ./localnet-setup/node3/treasurenetd:/treasurenet:Z
     networks:
       - localnet
     entrypoint: "bash start-docker.sh"

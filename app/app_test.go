@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/treasurenet/encoding"
+	"github.com/treasurenetprotocol/treasurenet/encoding"
 )
 
 func TestTreasurenetAppExport(t *testing.T) {

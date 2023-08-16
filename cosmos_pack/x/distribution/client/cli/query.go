@@ -181,16 +181,16 @@ $ %s query distribution tatreward %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			if err != nil {
 				return err
 			}
-			fmt.Println("validatorAddr.String()", validatorAddr.String())
+			// fmt.Println("validatorAddr.String()", validatorAddr.String())
 			res, err := queryClient.ValidatorTatreward(
 				cmd.Context(),
 				&types.QueryValidatorTatrewardRequest{ValidatorAddress: validatorAddr.String()},
 			)
-			fmt.Println("获取结束")
+			// fmt.Println("获取结束")
 			if err != nil {
 				return err
 			}
-			fmt.Println(555555)
+			// fmt.Println(555555)
 			return clientCtx.PrintProto(&res.Tatreward)
 		},
 	}

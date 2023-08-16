@@ -1,6 +1,8 @@
 package tx
 
 import (
+	"fmt"
+
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -72,6 +74,7 @@ func (w *wrapper) getBodyBytes() []byte {
 		// decoding bodyBz is derived from TxRaw so that it matches what was
 		// transmitted over the wire
 		var err error
+		//fmt.Printf("w.tx.Body:%+v", w.tx.Body)
 		w.bodyBz, err = proto.Marshal(w.tx.Body)
 		if err != nil {
 			panic(err)
@@ -278,6 +281,7 @@ func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
 }
 
 func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
+	fmt.Println("SetSignatures进行时")
 	n := len(signatures)
 	signerInfos := make([]*tx.SignerInfo, n)
 	rawSigs := make([][]byte, n)
@@ -295,7 +299,7 @@ func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 			Sequence:  sig.Sequence,
 		}
 	}
-
+	fmt.Printf("rawSigs:%+v\n", rawSigs)
 	w.setSignerInfos(signerInfos)
 	w.setSignatures(rawSigs)
 

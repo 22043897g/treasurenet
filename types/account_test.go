@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,10 +12,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	cryptocodec "github.com/treasurenet/crypto/codec"
-	"github.com/treasurenet/crypto/ethsecp256k1"
-	treasurenetcodec "github.com/treasurenet/encoding/codec"
-	"github.com/treasurenet/types"
+	cryptocodec "github.com/treasurenetprotocol/treasurenet/crypto/codec"
+	"github.com/treasurenetprotocol/treasurenet/crypto/ethsecp256k1"
+	ethermintcodec "github.com/treasurenetprotocol/treasurenet/encoding/codec"
+	"github.com/treasurenetprotocol/treasurenet/types"
 )
 
 func init() {
@@ -41,10 +42,17 @@ func (suite *AccountTestSuite) SetupTest() {
 	}
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	treasurenetcodec.RegisterInterfaces(interfaceRegistry)
+	ethermintcodec.RegisterInterfaces(interfaceRegistry)
 	suite.cdc = codec.NewProtoCodec(interfaceRegistry)
 }
 
 func TestAccountTestSuite(t *testing.T) {
 	suite.Run(t, new(AccountTestSuite))
+}
+
+func (suite *AccountTestSuite) TestAccountType() {
+	suite.account.CodeHash = common.BytesToHash(crypto.Keccak256(nil)).Hex()
+	suite.Require().Equal(types.AccountTypeEOA, suite.account.Type())
+	suite.account.CodeHash = common.BytesToHash(crypto.Keccak256([]byte{1, 2, 3})).Hex()
+	suite.Require().Equal(types.AccountTypeContract, suite.account.Type())
 }

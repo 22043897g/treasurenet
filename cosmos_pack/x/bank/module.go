@@ -35,7 +35,7 @@ var (
 
 // AppModuleBasic defines the basic application module used by the bank module.
 type AppModuleBasic struct {
-	cdc codec.Codec
+	Cdc codec.Codec
 }
 
 // Name returns the bank module's name.
@@ -110,7 +110,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{Cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 	}

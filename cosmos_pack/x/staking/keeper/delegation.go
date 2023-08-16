@@ -613,11 +613,9 @@ func (k Keeper) Delegate(
 	}
 
 	_, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt)
-
 	// Update delegation
 	delegation.Shares = delegation.Shares.Add(newShares)
 	k.SetDelegation(ctx, delegation)
-
 	// Call the after-modification hook
 	k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
 	return newShares, nil
@@ -691,14 +689,12 @@ func (k Keeper) DelegateTat(
 		}
 	}
 	_, newShares = k.AddValidatorTatTokensAndShares(ctx, validator, bondAmt)
-	fmt.Println("Tat测试newShares:", newShares)
 	// Update delegation
 	delegation.TatShares = delegation.Shares.Add(newShares)
 	k.SetDelegation(ctx, delegation)
 
 	// Call the after-modification hook
 	k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
-	fmt.Println("Tat测试创建validator的过程")
 	return newShares, nil
 }
 
@@ -756,7 +752,7 @@ func (k Keeper) Unbond(
 	// remove the shares and coins from the validator
 	// NOTE that the amount is later (in keeper.Delegation) moved between staking module pools
 	validator, amount = k.RemoveValidatorTokensAndShares(ctx, validator, shares)
-	fmt.Printf("测试路劲validator:%+v\n", validator)
+	// fmt.Printf("测试路劲validator:%+v\n", validator)
 	if validator.DelegatorShares.IsZero() && validator.IsUnbonded() {
 		// if not unbonded, we must instead remove validator in EndBlocker once it finishes its unbonding period
 		k.RemoveValidator(ctx, validator.GetOperator())

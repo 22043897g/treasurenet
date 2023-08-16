@@ -46,21 +46,23 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 	}
 
 	return Validator{
-		OperatorAddress:   operator.String(),
-		ConsensusPubkey:   pkAny,
-		Jailed:            false,
-		Status:            Unbonded,
-		Tokens:            sdk.ZeroInt(),
-		DelegatorShares:   sdk.ZeroDec(),
-		Description:       description,
-		UnbondingHeight:   int64(0),
-		UnbondingTime:     time.Unix(0, 0).UTC(),
-		Commission:        NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-		MinSelfDelegation: sdk.OneInt(),
-		TatTokens:         sdk.ZeroInt(),
-		NewTokens:         sdk.ZeroInt(),
-		TatPower:          sdk.ZeroInt(),
-		NewUnitPower:      sdk.ZeroInt(),
+		OperatorAddress: operator.String(),
+		ConsensusPubkey: pkAny,
+		Jailed:          false,
+		Status:          Unbonded,
+		Tokens:          sdk.ZeroInt(),
+		DelegatorShares: sdk.ZeroDec(),
+		Description:     description,
+		UnbondingHeight: int64(0),
+		UnbondingTime:   time.Unix(0, 0).UTC(),
+		Commission:      NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		// MinSelfDelegation: sdk.OneInt(),
+		MinSelfDelegation: sdk.NewIntWithDecimal(int64(158), 18),
+		// MinSelfDelegation: sdk.TwoInt(),
+		TatTokens:    sdk.ZeroInt(),
+		NewTokens:    sdk.ZeroInt(),
+		TatPower:     sdk.ZeroInt(),
+		NewUnitPower: sdk.ZeroInt(),
 	}, nil
 }
 
@@ -271,6 +273,18 @@ func (v Validator) ABCIValidatorUpdate(r sdk.Int) abci.ValidatorUpdate {
 		TatPower: v.ConsensusTatPower(r),
 	}
 }
+func (v Validator) ABCIBidValidatorUpdate(r sdk.Int) abci.ValidatorUpdate {
+	tmProtoPk, err := v.TmConsPublicKey()
+	if err != nil {
+		panic(err)
+	}
+
+	return abci.ValidatorUpdate{
+		PubKey:   tmProtoPk,
+		Power:    v.ConsensusBidPower(r),
+		TatPower: v.ConsensusTatPower(r),
+	}
+}
 
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
@@ -323,12 +337,14 @@ func (v Validator) InvalidExRate() bool {
 
 // calculate the token worth of provided shares
 func (v Validator) TokensFromShares(shares sdk.Dec) sdk.Dec {
-	return (shares.MulInt(v.Tokens)).Quo(v.DelegatorShares)
+	// return (shares.MulInt(v.Tokens)).Quo(v.DelegatorShares)
+	return (shares.Mul(v.DelegatorShares)).Quo(v.DelegatorShares)
 }
 
 // calculate the token worth of provided shares, truncated
 func (v Validator) TokensFromSharesTruncated(shares sdk.Dec) sdk.Dec {
-	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
+	// return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
+	return (shares.Mul(v.DelegatorShares)).QuoTruncate(v.DelegatorShares)
 }
 
 // TokensFromSharesRoundUp returns the token worth of provided shares, rounded
@@ -343,8 +359,16 @@ func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
 		return sdk.ZeroDec(), ErrInsufficientShares
 	}
+	// return v.GetDelegatorShares().MulInt(amt).QuoInt(v.GetTokens()), nil
+	return v.GetDelegatorShares().MulInt(amt).Quo(v.GetDelegatorShares()), nil
+}
 
-	return v.GetDelegatorShares().MulInt(amt).QuoInt(v.GetTokens()), nil
+// 由于slashing模块的接入当validator被惩罚时，tokens进行了衰减，导致后期delegator_shares的值和token不一致，最后staker进行委托后导致值出现小数的问题影响使用
+func (v Validator) SharesFromTokensNew(amt sdk.Int) (sdk.Dec, error) {
+	if v.Tokens.IsZero() {
+		return sdk.ZeroDec(), ErrInsufficientShares
+	}
+	return v.GetDelegatorShares().MulInt(amt).Quo(v.GetDelegatorShares()), nil
 }
 
 // SharesFromTokens returns the shares of a delegation given a bond amount. It
@@ -364,7 +388,8 @@ func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, error) {
 		return sdk.ZeroDec(), ErrInsufficientShares
 	}
 
-	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(v.GetTokens().ToDec()), nil
+	// return v.GetDelegatorShares().MulInt(amt).QuoTruncate(v.GetTokens().ToDec()), nil
+	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(v.GetDelegatorShares()), nil
 }
 
 // get the bonded tokens which the validator holds
@@ -384,6 +409,9 @@ func (v Validator) ConsensusPower(r sdk.Int) int64 {
 	}
 
 	return 0
+}
+func (v Validator) ConsensusBidPower(r sdk.Int) int64 {
+	return v.PotentialConsensusPower(r)
 }
 
 func (v Validator) ConsensusTatPower(r sdk.Int) int64 {
@@ -451,16 +479,22 @@ func (v Validator) AddTokensFromDel(amount sdk.Int) (Validator, sdk.Dec) {
 
 		issuedShares = shares
 	}
-	//fmt.Printf("v的值:%+v\n", v)
+	// fmt.Printf("v的值:%+v\n", v)
 	v.Tokens = v.Tokens.Add(amount)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
-	//将tattokens移参数的形式存储起来，本来直接存在validator中就可以，但是setvalidator存的是validator的序列化键值对，但是因为编码问题validator的序列化大小已经确定，更改起来太麻烦，只能用参数的形式来存储
+	// 将tattokens移参数的形式存储起来，本来直接存在validator中就可以，但是setvalidator存的是validator的序列化键值对，但是因为编码问题validator的序列化大小已经确定，更改起来太麻烦，只能用参数的形式来存储
 	return v, issuedShares
 }
 func (v Validator) AddTatTokens(amount sdk.Int) sdk.Int {
-	//fmt.Printf("v的值:%+v\n", v)
+	// fmt.Printf("v的值:%+v\n", v)
 	TatTokens := v.TatTokens.Add(amount)
 	return TatTokens
+}
+
+func (v Validator) AddTokens(amount sdk.Int) sdk.Int {
+	// fmt.Printf("v的值:%+v\n", v)
+	TotalTokens := v.Tokens.Add(amount)
+	return TotalTokens
 }
 
 // AddTokensFromDel adds tat tokens to a validator

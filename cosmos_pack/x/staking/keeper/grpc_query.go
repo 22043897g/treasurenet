@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -32,6 +33,8 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 	}
 
 	var validators types.Validators
+	totaltokens := sdk.ZeroInt()
+	// token := sdk.ZeroInt()
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
@@ -53,11 +56,26 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 
 		return true, nil
 	})
-
+	for _, value := range validators {
+		fmt.Printf("value.Tokens1:%+v\n", value.Tokens)
+		// totaltokens = value.Tokens.Add(value.Tokens)
+		totaltokens = totaltokens.Add(value.Tokens)
+		// totaltokens = value.Tokens.AddTokens(value.Tokens)
+	}
+	fmt.Printf("totaltokens:%+v\n", totaltokens)
+	// fmt.Printf("接口测试查询token占比value:%+v\n", value)
+	// for _, value := range validators {
+	// 	fmt.Printf("totaltokens1:%+v\n", totaltokens)
+	// 	value.TokensShares = sdk.NewDecFromInt(value.Tokens).QuoTruncate(sdk.NewDecFromInt(totaltokens))
+	// 	fmt.Printf("接口测试查询token占比value.TokensShares:%+v\n", value.TokensShares)
+	// 	fmt.Printf("接口测试查询token占比value:%+v\n", value)
+	// }
+	for i := 0; i < len(validators); i++ {
+		validators[i].DelegatorShares = sdk.NewDecFromInt(validators[i].Tokens).QuoTruncate(sdk.NewDecFromInt(totaltokens))
+	}
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-
 	return &types.QueryValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
 }
 
@@ -287,6 +305,54 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 	}
 
 	return &types.QueryDelegatorDelegationsResponse{DelegationResponses: delegationResps, Pagination: pageRes}, nil
+
+}
+
+// Total staking delegation
+func (k Querier) DelegatorTotalDelegations(c context.Context, req *types.QueryDelegatorDelegationsRequest) (*types.QueryPoolResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.DelegatorAddr == "" {
+		return nil, status.Error(codes.InvalidArgument, "delegator address cannot be empty")
+	}
+	var delegations types.Delegations
+	ctx := sdk.UnwrapSDKContext(c)
+	balances := sdk.NewCoin(k.BondDenom(ctx), sdk.ZeroInt())
+	// var newAmount sdk.Int
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+	store := ctx.KVStore(k.storeKey)
+	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
+	_, err = query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
+		delegation, err := types.UnmarshalDelegation(k.cdc, value)
+		if err != nil {
+			return err
+		}
+		delegations = append(delegations, delegation)
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	delegationResps, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	for _, value := range delegationResps {
+		balances = balances.Add(value.Balance)
+	}
+
+	pool := types.NewPool(
+		sdk.ZeroInt(),
+		balances.Amount,
+	)
+
+	return &types.QueryPoolResponse{Pool: pool}, nil
 
 }
 

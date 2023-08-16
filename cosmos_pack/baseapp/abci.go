@@ -29,7 +29,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.
 	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
-
+	// fmt.Printf("InitChain req:%+v\n", req)
 	// If req.InitialHeight is > 1, then we set the initial version in the
 	// stores.
 	if req.InitialHeight > 1 {
@@ -40,7 +40,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 			panic(err)
 		}
 	}
-
 	// initialize the deliver state and check state with a correct header
 	app.setDeliverState(initHeader)
 	app.setCheckState(initHeader)
@@ -55,12 +54,9 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	if app.initChainer == nil {
 		return
 	}
-
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
-
 	res = app.initChainer(app.deliverState.ctx, req)
-
 	// sanity check
 	if len(req.Validators) > 0 {
 		if len(req.Validators) != len(res.Validators) {
@@ -71,17 +67,14 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 				),
 			)
 		}
-
 		sort.Sort(abci.ValidatorUpdates(req.Validators))
 		sort.Sort(abci.ValidatorUpdates(res.Validators))
-
 		for i := range res.Validators {
 			if !proto.Equal(&res.Validators[i], &req.Validators[i]) {
 				panic(fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i))
 			}
 		}
 	}
-
 	// In the case of a new chain, AppHash will be the hash of an empty string.
 	// During an upgrade, it'll be the hash of the last committed block.
 	var appHash []byte
@@ -93,7 +86,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		emptyHash := sha256.Sum256([]byte{})
 		appHash = emptyHash[:]
 	}
-
 	// NOTE: We don't commit, but BeginBlock for block `initial_height` starts from this
 	// deliverState.
 	return abci.ResponseInitChain{
@@ -153,7 +145,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if err := app.validateHeight(req); err != nil {
 		panic(err)
 	}
-
 	// Initialize the DeliverTx state. If this is the first block, it should
 	// already be initialized in InitChain. Otherwise app.deliverState will be
 	// nil, since it is reset on Commit.
@@ -310,7 +301,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// Reset the Check state to the latest committed.
 	//
 	// NOTE: This is safe because Tendermint holds a lock on the mempool for
-	// Commit. Use the header from this latest block.
+	// Commit. Use the header from this latest block.s
 	app.setCheckState(header)
 
 	// empty/reset the deliver state

@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/treasurenet/encoding"
+	"github.com/treasurenetprotocol/treasurenet/encoding"
 )
 
 // NewDefaultGenesisState generates the default state for the application.
@@ -27,7 +27,6 @@ func NewDefaultGenesisState() simapp.GenesisState {
 func (app *TreasurenetApp) ExportAppStateAndValidators(
 	forZeroHeight bool, jailAllowedAddrs []string,
 ) (servertypes.ExportedApp, error) {
-
 	// Creates context with current height and checks txs for ctx to be usable by start of next block
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
@@ -63,7 +62,7 @@ func (app *TreasurenetApp) ExportAppStateAndValidators(
 
 // prepare for fresh start at zero height
 // NOTE zero height genesis is a temporary feature which will be deprecated
-//      in favor of export at a block height
+// in favor of export at a block height
 func (app *TreasurenetApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) error {
 	applyAllowedAddrs := false
 
@@ -87,7 +86,7 @@ func (app *TreasurenetApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowed
 
 	/* Handle fee distribution state. */
 
-	// withdraw all validator commission 撤销所有验证者佣金
+	// withdraw all validator commission
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
 		return false
@@ -174,7 +173,8 @@ func (app *TreasurenetApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowed
 	counter := int16(0)
 
 	for ; iter.Valid(); iter.Next() {
-		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
+		addr := sdk.ValAddress(iter.Key()[1:])
+		// addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
 		validator, found := app.StakingKeeper.GetValidator(ctx, addr)
 		if !found {
 			return fmt.Errorf("expected validator %s not found", addr)
@@ -189,7 +189,9 @@ func (app *TreasurenetApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowed
 		counter++
 	}
 
-	iter.Close()
+	if err := iter.Close(); err != nil {
+		return err
+	}
 
 	if _, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx); err != nil {
 		return err

@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/treasurenet/x/evm/types"
+	"github.com/treasurenetprotocol/treasurenet/x/evm/types"
 )
 
 func (suite *KeeperTestSuite) TestParams() {

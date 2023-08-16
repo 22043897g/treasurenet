@@ -2,34 +2,44 @@ package types
 
 import (
 	"fmt"
+	"math/big"
 
-	yaml "gopkg.in/yaml.v2"
+	"github.com/ethereum/go-ethereum/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	"github.com/treasurenet/types"
+	// "github.com/treasurenetprotocol/treasurenet/types"
+	"github.com/treasurenetprotocol/treasurenet/types"
 )
 
 var _ paramtypes.ParamSet = &Params{}
 
-const (
+var (
+	// DefaultEVMDenom defines the default EVM denomination on Ethermint
 	DefaultEVMDenom = types.AttoPhoton
+	// DefaultMinGasMultiplier is 0.5 or 50%
+	DefaultMinGasMultiplier = sdk.NewDecWithPrec(50, 2)
+	// DefaultAllowUnprotectedTxs rejects all unprotected txs (i.e false)
+	DefaultAllowUnprotectedTxs = false
 )
 
 // Parameter keys
 var (
-	ParamStoreKeyEVMDenom     = []byte("EVMDenom")
-	ParamStoreKeyEnableCreate = []byte("EnableCreate")
-	ParamStoreKeyEnableCall   = []byte("EnableCall")
-	ParamStoreKeyExtraEIPs    = []byte("EnableExtraEIPs")
-	ParamStoreKeyChainConfig  = []byte("ChainConfig")
+	ParamStoreKeyEVMDenom            = []byte("EVMDenom")
+	ParamStoreKeyEnableCreate        = []byte("EnableCreate")
+	ParamStoreKeyEnableCall          = []byte("EnableCall")
+	ParamStoreKeyExtraEIPs           = []byte("EnableExtraEIPs")
+	ParamStoreKeyChainConfig         = []byte("ChainConfig")
+	ParamStoreKeyAllowUnprotectedTxs = []byte("AllowUnprotectedTxs")
 
-	// AvailableExtraEIPs define the list of all EIPs that can be enabled by the EVM interpreter. These EIPs are applied in
-	// order and can override the instruction sets from the latest hard fork enabled by the ChainConfig. For more info
-	// check: https://github.com/ethereum/go-ethereum/blob/v1.10.4/core/vm/interpreter.go#L122
-	AvailableExtraEIPs = []int64{1344, 1884, 2200, 2929}
+	// AvailableExtraEIPs define the list of all EIPs that can be enabled by the
+	// EVM interpreter. These EIPs are applied in order and can override the
+	// instruction sets from the latest hard fork enabled by the ChainConfig. For
+	// more info check:
+	// https://github.com/ethereum/go-ethereum/blob/master/core/vm/interpreter.go#L97
+	AvailableExtraEIPs = []int64{1344, 1884, 2200, 2929, 3198, 3529}
 )
 
 // ParamKeyTable returns the parameter key table.
@@ -52,18 +62,13 @@ func NewParams(evmDenom string, enableCreate, enableCall bool, config ChainConfi
 // ExtraEIPs is empty to prevent overriding the latest hard fork instruction set
 func DefaultParams() Params {
 	return Params{
-		EvmDenom:     DefaultEVMDenom,
-		EnableCreate: true,
-		EnableCall:   true,
-		ChainConfig:  DefaultChainConfig(),
-		ExtraEIPs:    nil,
+		EvmDenom:            DefaultEVMDenom,
+		EnableCreate:        true,
+		EnableCall:          true,
+		ChainConfig:         DefaultChainConfig(),
+		ExtraEIPs:           nil,
+		AllowUnprotectedTxs: DefaultAllowUnprotectedTxs,
 	}
-}
-
-// String implements the fmt.Stringer interface
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
 }
 
 // ParamSetPairs returns the parameter set pairs.
@@ -74,6 +79,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamStoreKeyEnableCall, &p.EnableCall, validateBool),
 		paramtypes.NewParamSetPair(ParamStoreKeyExtraEIPs, &p.ExtraEIPs, validateEIPs),
 		paramtypes.NewParamSetPair(ParamStoreKeyChainConfig, &p.ChainConfig, validateChainConfig),
+		paramtypes.NewParamSetPair(ParamStoreKeyAllowUnprotectedTxs, &p.AllowUnprotectedTxs, validateBool),
 	}
 }
 
@@ -138,4 +144,9 @@ func validateChainConfig(i interface{}) error {
 	}
 
 	return cfg.Validate()
+}
+
+// IsLondon returns if london hardfork is enabled.
+func IsLondon(ethConfig *params.ChainConfig, height int64) bool {
+	return ethConfig.IsLondon(big.NewInt(height))
 }

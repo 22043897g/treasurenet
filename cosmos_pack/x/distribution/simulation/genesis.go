@@ -72,6 +72,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			CommunityTax:        communityTax,
 			BaseProposerReward:  baseProposerReward,
 			BonusProposerReward: bonusProposerReward,
+			TatReward:           sdk.NewDecWithPrec(60, 2),
 			WithdrawAddrEnabled: withdrawEnabled,
 		},
 	}

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"math"
+	"math/rand"
 	"reflect"
 	"sort"
 	"strconv"
@@ -102,7 +102,7 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	return validatorUpdates
 }
 
-func (k Keeper) NewBlockValidatorUpdates(ctx sdk.Context, log sdk.ABCIMessageLogs) []abci.ValidatorUpdate {
+func (k Keeper) NewBlockValidatorUpdates(ctx sdk.Context, req abci.RequestEndBlock, log sdk.ABCIMessageLogs) []abci.ValidatorUpdate {
 	// Calculate validator set changes.
 	//
 	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
@@ -112,7 +112,7 @@ func (k Keeper) NewBlockValidatorUpdates(ctx sdk.Context, log sdk.ABCIMessageLog
 	// unbonded after the Endblocker (go from Bonded -> Unbonding during
 	// ApplyAndReturnValidatorSetUpdates and then Unbonding -> Unbonded during
 	// UnbondAllMatureValidatorQueue).
-	validatorUpdates, err := k.NewApplyAndReturnValidatorSetUpdates(ctx, log)
+	validatorUpdates, err := k.NewApplyAndReturnValidatorSetUpdates(ctx, req, log)
 	if err != nil {
 		panic(err)
 	}
@@ -308,30 +308,471 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 	return updates, err
 }
-func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.ABCIMessageLogs) (updates []abci.ValidatorUpdate, err error) {
+
+// bid v1.0.0
+// func (k Keeper) NewApplyAndReturnValidatorSetUpdatestest(ctx sdk.Context, log sdk.ABCIMessageLogs) (updates []abci.ValidatorUpdate, err error) {
+// 	params := k.GetParams(ctx)
+// 	// var Mine []string
+// 	// var ListSuperValidator []string
+// 	// var ListValidator []string
+// 	// var TemporarymaxValidators int
+// 	// var tat int64
+// 	// var newunit int64
+// 	// fmt.Printf("ctx=%+v\n", ctx)
+// 	maxValidators := params.MaxValidators
+// 	powerReduction := k.PowerReduction(ctx)
+// 	// powerReduction2 := k.PowerReduction2(ctx)
+// 	totalPower := sdk.ZeroInt()
+// 	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdk.ZeroInt(), sdk.ZeroInt()
+// 	// fmt.Println("powerReduction2:", powerReduction2)
+// 	// Retrieve the last validator set.
+// 	// The persistent set is updated later in this function.
+// 	// (see LastValidatorPowerKey).
+// 	last, err := k.getLastValidatorsByAddr(ctx)
+// 	// fmt.Println("last:", last)
+// 	// last, err := k.getLastValidatorsNewByAddr(ctx)
+// 	fmt.Println("last最开始的地方:", last)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	/*
+// 	 * accounts_address  That is, the account address returned from the event log is converted into the corresponding validator_ Addresses, and then replace POS
+// 	 */
+// 	// Create valaddress from bech32 string
+
+// 	// delegator_address := "eth1ujuwccre5kadumtlcae7dy5z96k2xqyv7lpp0h"
+// 	// account_address, _ := sdk.AccAddressFromBech32(delegator_address)
+// 	// fmt.Printf("account_address:%v\n", account_address)
+// 	gasUsed := ctx.BlockGasMeter().GasConsumed()
+// 	fmt.Println("EndBlock Monitor the usage of gas:", gasUsed)
+// 	// validator, _ := sdk.ValAddressFromBech32(delegator_address)
+// 	// fmt.Printf("validator:%v\n", validator)
+// 	// validator_address := sdk.ValAddress(account_address).String()
+// 	// fmt.Printf("validator_address:%v\n", validator_address)
+
+// 	// k.SetValidatorByPowerIndex(ctx, validator)
+// 	// Iterate over validators, highest power to lowest.  Iterative verifier, from highest power to lowest power
+// 	// listsupervalidator, listvalidator := k.CombinedSliceList(ctx, iterator, maxValidators, log)
+// 	// newselectlist := SelectList(listsupervalidator, listvalidator)
+// 	fmt.Println("log:", log)
+// 	for _, eventlog := range log {
+// 		if eventlog.MsgIndex == 1 {
+// 			iterator := k.ValidatorsPowerStoreIterator(ctx)
+// 			defer iterator.Close()
+// 			// Tatiterator := k.ValidatorsNewPowerStoreIterator(ctx)
+// 			// defer Tatiterator.Close()
+// 			listsupervalidator, listvalidator := k.CombinedSliceList(ctx, iterator, maxValidators, log)
+// 			fmt.Println("listsupervalidatoe:", listsupervalidator)
+// 			fmt.Println("listvalidator", listvalidator)
+// 			newselectlist := SelectList(listsupervalidator, listvalidator)
+// 			newlist := make(map[string]string, len(newselectlist))
+// 			for _, value := range newselectlist {
+// 				newlist[value] = value
+// 			}
+// 			k.DeletsNewItreator2(ctx, maxValidators, newselectlist)
+// 			// fmt.Println("删除iterator迭代器:", newselectlist)
+
+// 			newTatiteratorlist := make(map[string]string)
+// 			NewTatiterator := k.ValidatorsNewPowerStoreIterator(ctx)
+// 			defer NewTatiterator.Close()
+// 			for count := 0; NewTatiterator.Valid() && count < int(maxValidators); NewTatiterator.Next() {
+// 				// everything that is iterated in this loop is becoming or already a
+// 				// part of the bonded validator set
+// 				valAddr := sdk.ValAddress(NewTatiterator.Value())
+// 				// fetch the old power bytes
+// 				valAddrStr, _ := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+// 				newTatiteratorlist[valAddrStr] = valAddrStr
+// 			}
+// 			fmt.Printf("11111111111111111111bid功能中重新生成新的newTatiteratorlist:%+v\n", newTatiteratorlist)
+// 			for index := range newTatiteratorlist {
+// 				_, is := last[index]
+// 				if !is {
+// 					newvalAddrStr, _ := sdk.ValAddressFromBech32(index)
+// 					// newval, _ := k.GetValidator(ctx, newvalAddrStr)
+// 					// fmt.Printf("2222222newval:%+v\n", newval)
+// 					newValidator := k.mustGetValidator(ctx, newvalAddrStr)
+// 					fmt.Printf("333333333newValidator:%+v\n", newValidator)
+// 					newPowerup := newValidator.ConsensusBidPower(powerReduction)
+// 					fmt.Printf("44444444newPowerup:%+v\n", newPowerup)
+// 					updates = append(updates, newValidator.ABCIBidValidatorUpdate(powerReduction))
+// 					k.SetLastValidatorPower(ctx, newvalAddrStr, newPowerup)
+// 					if newValidator.IsUnbonded() {
+// 						newValidator, err = k.unbondedToBonded(ctx, newValidator)
+// 						if err != nil {
+// 							fmt.Println("测试步骤", 123)
+// 							return
+// 						}
+// 						amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(newValidator.GetTokens())
+// 					}
+// 					if newValidator.IsUnbonding() {
+// 						newValidator, err = k.unbondingToBonded(ctx, newValidator)
+// 						if err != nil {
+// 							fmt.Println("测试步骤", 123)
+// 							return
+// 						}
+// 						amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(newValidator.GetTokens())
+// 					}
+// 				}
+// 			}
+// 			Newiterator := k.ValidatorsPowerStoreIterator(ctx)
+// 			// TatIterator := k.ValidatorsNewPowerStoreIteratorValidatorsNewPowerStoreIterator(ctx)
+// 			// iterator := k.ValidatorsNewPowerStoreIterator(ctx)
+// 			defer Newiterator.Close()
+// 			for count := 0; Newiterator.Valid() && count < int(maxValidators); Newiterator.Next() {
+// 				// everything that is iterated in this loop is becoming or already a
+// 				// part of the bonded validator set
+// 				// fmt.Printf("iterator.Value:%v\n", iterator.Value())
+// 				valAddr := sdk.ValAddress(Newiterator.Value())
+// 				// fmt.Println("valAddr:", valAddr)
+// 				validator := k.mustGetValidator(ctx, valAddr)
+// 				// fmt.Printf("validator:%+v\n", validator)
+// 				if validator.Jailed {
+// 					panic("should never retrieve a jailed validator from the power store")
+// 				}
+
+// 				// if we get to a zero-power validator (which we don't bond),
+// 				// there are no more possible bonded validators
+// 				if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
+// 					break
+// 				}
+// 				// fmt.Println("测试步骤", 123)
+// 				// switch {
+// 				// case validator.IsUnbonded():
+// 				// 	validator, _ = k.unbondedToBonded(ctx, validator)
+
+// 				// 	amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 				// case validator.IsUnbonding():
+// 				// 	validator, _ = k.unbondingToBonded(ctx, validator)
+
+// 				// 	amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 				// case validator.IsBonded():
+// 				// 	// no state change
+// 				// default:
+// 				// 	panic("unexpected validator status")
+// 				// }
+// 				valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+// 				fmt.Println("valAddrStr1:", valAddrStr)
+// 				// newvalAddrStr, _ := sdk.ValAddressFromBech32(valAddrStr)
+// 				// newValidator, _ := k.GetValidator(ctx, newvalAddrStr)
+
+// 				// fmt.Println("valAddrStr", valAddrStr)
+// 				if err != nil {
+// 					return nil, err
+// 				}
+// 				//				oldPowerBytes, found := last[valAddrStr]
+// 				_, ok := newTatiteratorlist[valAddrStr]
+
+// 				// fmt.Println("oldPowerBytes", oldPowerBytes)
+// 				newPower := validator.ConsensusPower(powerReduction)
+// 				newPower2 := validator.ConsensusTatPower(powerReduction)
+// 				newunitPower := validator.ConsensusNewPower(powerReduction)
+// 				k.SetTatPower(ctx, newPower2, valAddr)
+// 				k.SetNewUnitPower(ctx, newunitPower, valAddr)
+
+// 				// k.SetNewValidatorByPowerIndex(ctx, validator)
+// 				// newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
+// 				// // update the validator set if power has changed
+// 				// if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+// 				// 	updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+// 				// 	k.SetLastValidatorPower(ctx, valAddr, newPower)
+// 				// }
+// 				if ok {
+// 					fmt.Println("last1:", last)
+// 					delete(last, valAddrStr)
+// 				}
+// 				// fmt.Println("last1:", last)
+// 				// delete(last, valAddrStr)
+// 				count++
+
+// 				totalPower = totalPower.Add(sdk.NewInt(newPower))
+// 				fmt.Println("bid后开始监听生成新的Iterator:", totalPower)
+// 			}
+
+// 			noLongerBonded, err := sortNoLongerBonded(last)
+// 			if err != nil {
+// 				return nil, err
+// 			}
+
+// 			for _, valAddrBytes := range noLongerBonded {
+// 				validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
+// 				validator, err = k.bondedToUnbonding(ctx, validator)
+// 				if err != nil {
+// 					return nil, err
+// 				}
+// 				amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
+// 				k.DeleteLastValidatorPower(ctx, validator.GetOperator())
+// 				updates = append(updates, validator.ABCIValidatorUpdateZero())
+// 			}
+
+// 			// Update the pools based on the recent updates in the validator set:
+// 			// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred
+// 			// to the Bonded pool.
+// 			// - The tokens from the bonded validators that are being kicked out from the validator set
+// 			// need to be transferred to the NotBonded pool.
+// 			switch {
+// 			// Compare and subtract the respective amounts to only perform one transfer.
+// 			// This is done in order to avoid doing multiple updates inside each iterator/loop.
+// 			case amtFromNotBondedToBonded.GT(amtFromBondedToNotBonded):
+// 				k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded))
+// 			case amtFromNotBondedToBonded.LT(amtFromBondedToNotBonded):
+// 				k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded))
+// 			default: // equal amounts of tokens; no update required
+// 			}
+
+// 		} else if eventlog.MsgIndex == 2 {
+// 			newTatiteratorlist := make(map[string]string)
+// 			NewTatiterator := k.ValidatorsNewPowerStoreIterator(ctx)
+// 			defer NewTatiterator.Close()
+// 			for count := 0; NewTatiterator.Valid() && count < int(maxValidators); NewTatiterator.Next() {
+// 				// everything that is iterated in this loop is becoming or already a
+// 				// part of the bonded validator set
+// 				valAddr := sdk.ValAddress(NewTatiterator.Value())
+// 				// fetch the old power bytes
+// 				valAddrStr, _ := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+// 				newTatiteratorlist[valAddrStr] = valAddrStr
+// 			}
+// 			fmt.Printf("222222222bid功能中重新生成新的newTatiteratorlist:%+v\n", newTatiteratorlist)
+// 			iterator := k.ValidatorsPowerStoreIterator(ctx)
+// 			defer iterator.Close()
+// 			fmt.Println("维持之前的iterator:", iterator)
+// 			// k.DeleteNewIterator(ctx)
+// 			for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+// 				// everything that is iterated in this loop is becoming or already a
+// 				// part of the bonded validator set
+// 				valAddr := sdk.ValAddress(iterator.Value())
+// 				validator := k.mustGetValidator(ctx, valAddr)
+// 				fmt.Printf("validator eventlog.MsgIndex == 2  :%+v\n", validator)
+// 				if validator.Jailed {
+// 					panic("should never retrieve a jailed validator from the power store")
+// 				}
+
+// 				// if we get to a zero-power validator (which we don't bond),
+// 				// there are no more possible bonded validators
+// 				if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
+// 					break
+// 				}
+
+// 				// apply the appropriate state change if necessary
+// 				// switch {
+// 				// case validator.IsUnbonded():
+// 				// 	validator, err = k.unbondedToBonded(ctx, validator)
+// 				// 	if err != nil {
+// 				// 		return
+// 				// 	}
+// 				// 	amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 				// case validator.IsUnbonding():
+// 				// 	validator, err = k.unbondingToBonded(ctx, validator)
+// 				// 	if err != nil {
+// 				// 		return
+// 				// 	}
+// 				// 	amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 				// case validator.IsBonded():
+// 				// 	// no state change
+// 				// default:
+// 				// 	panic("unexpected validator status")
+// 				// }
+// 				// fetch the old power bytes
+// 				valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+// 				fmt.Println("valAddrStr2:", valAddrStr)
+// 				if err != nil {
+// 					return nil, err
+// 				}
+// 				// oldPowerBytes, found := last[valAddrStr]
+// 				oldPowerBytes := last[valAddrStr]
+// 				_, ok := newTatiteratorlist[valAddrStr]
+// 				newPower := validator.ConsensusPower(powerReduction)
+// 				newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
+// 				// update the validator set if power has changed
+// 				// if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+// 				// 	updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+
+// 				// 	k.SetLastValidatorPower(ctx, valAddr, newPower)
+// 				// }
+// 				if !bytes.Equal(oldPowerBytes, newPowerBytes) {
+// 					updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+
+// 					k.SetLastValidatorPower(ctx, valAddr, newPower)
+// 				}
+// 				if ok {
+// 					fmt.Println("测试last:", last)
+// 					delete(last, valAddrStr)
+// 				}
+// 				// fmt.Println("测试last", last)
+// 				// delete(last, valAddrStr)
+// 				count++
+
+// 				totalPower = totalPower.Add(sdk.NewInt(newPower))
+// 				fmt.Println("totalPowerold(没有开始bid,按照之前的iterator,totalPower的值):", totalPower)
+// 			}
+// 			noLongerBonded, err := sortNoLongerBonded(last)
+// 			if err != nil {
+// 				return nil, err
+// 			}
+
+// 			for _, valAddrBytes := range noLongerBonded {
+// 				validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
+// 				validator, err = k.bondedToUnbonding(ctx, validator)
+// 				if err != nil {
+// 					return nil, err
+// 				}
+// 				amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
+// 				k.DeleteLastValidatorPower(ctx, validator.GetOperator())
+// 				updates = append(updates, validator.ABCIValidatorUpdateZero())
+// 			}
+
+// 			// Update the pools based on the recent updates in the validator set:
+// 			// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred
+// 			// to the Bonded pool.
+// 			// - The tokens from the bonded validators that are being kicked out from the validator set
+// 			// need to be transferred to the NotBonded pool.
+// 			switch {
+// 			// Compare and subtract the respective amounts to only perform one transfer.
+// 			// This is done in order to avoid doing multiple updates inside each iterator/loop.
+// 			case amtFromNotBondedToBonded.GT(amtFromBondedToNotBonded):
+// 				k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded))
+// 			case amtFromNotBondedToBonded.LT(amtFromBondedToNotBonded):
+// 				k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded))
+// 			default: // equal amounts of tokens; no update required
+// 			}
+
+// 			// // set total power on lookup index if there are any updates
+// 			// if len(updates) > 0 {
+// 			// 	k.SetLastTotalPower(ctx, totalPower)
+// 			// }
+// 		} else {
+// 			// Iterate over validators, highest power to lowest.
+// 			iterator := k.ValidatorsPowerStoreIterator(ctx)
+// 			defer iterator.Close()
+
+// 			for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+// 				// everything that is iterated in this loop is becoming or already a
+// 				// part of the bonded validator set
+// 				valAddr := sdk.ValAddress(iterator.Value())
+// 				validator := k.mustGetValidator(ctx, valAddr)
+// 				if validator.Jailed {
+// 					panic("should never retrieve a jailed validator from the power store")
+// 				}
+// 				// if we get to a zero-power validator (which we don't bond),
+// 				// there are no more possible bonded validators
+// 				if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
+// 					break
+// 				}
+
+// 				// apply the appropriate state change if necessary
+// 				switch {
+// 				case validator.IsUnbonded():
+// 					validator, err = k.unbondedToBonded(ctx, validator)
+// 					if err != nil {
+// 						return
+// 					}
+// 					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 				case validator.IsUnbonding():
+// 					validator, err = k.unbondingToBonded(ctx, validator)
+// 					if err != nil {
+// 						return
+// 					}
+// 					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 				case validator.IsBonded():
+// 					// no state change
+// 				default:
+// 					panic("unexpected validator status")
+// 				}
+// 				// fetch the old power bytes
+// 				valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+// 				if err != nil {
+// 					return nil, err
+// 				}
+// 				oldPowerBytes, found := last[valAddrStr]
+// 				newPower := validator.ConsensusPower(powerReduction)
+// 				newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
+// 				// update the validator set if power has changed
+// 				if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+// 					updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+
+// 					k.SetLastValidatorPower(ctx, valAddr, newPower)
+// 				}
+// 				delete(last, valAddrStr)
+// 				count++
+
+// 				totalPower = totalPower.Add(sdk.NewInt(newPower))
+// 			}
+
+// 			noLongerBonded, err := sortNoLongerBonded(last)
+// 			if err != nil {
+// 				return nil, err
+// 			}
+
+// 			for _, valAddrBytes := range noLongerBonded {
+// 				validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
+// 				validator, err = k.bondedToUnbonding(ctx, validator)
+// 				if err != nil {
+// 					return nil, err
+// 				}
+// 				amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
+// 				k.DeleteLastValidatorPower(ctx, validator.GetOperator())
+// 				updates = append(updates, validator.ABCIValidatorUpdateZero())
+// 			}
+
+// 			// Update the pools based on the recent updates in the validator set:
+// 			// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred
+// 			// to the Bonded pool.
+// 			// - The tokens from the bonded validators that are being kicked out from the validator set
+// 			// need to be transferred to the NotBonded pool.
+// 			switch {
+// 			// Compare and subtract the respective amounts to only perform one transfer.
+// 			// This is done in order to avoid doing multiple updates inside each iterator/loop.
+// 			case amtFromNotBondedToBonded.GT(amtFromBondedToNotBonded):
+// 				k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded))
+// 			case amtFromNotBondedToBonded.LT(amtFromBondedToNotBonded):
+// 				k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded))
+// 			default: // equal amounts of tokens; no update required
+// 			}
+
+// 			// // set total power on lookup index if there are any updates
+// 			// if len(updates) > 0 {
+// 			// 	k.SetLastTotalPower(ctx, totalPower)
+// 			// }
+// 		}
+// 	}
+// 	// set total power on lookup index if there are any updates
+// 	if len(updates) > 0 {
+// 		k.SetLastTotalPower(ctx, totalPower)
+// 	}
+// 	fmt.Println("updates:", updates)
+// 	return updates, err
+// }
+
+// bid v1.0.0
+
+/*****bid n2.0.0*****/
+func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, req abci.RequestEndBlock, log sdk.ABCIMessageLogs) (updates []abci.ValidatorUpdate, err error) {
 	params := k.GetParams(ctx)
-	var Data [][]interface{}
+	// var Mine []string
+	// var ListSuperValidator []string
+	// var ListValidator []string
+	// var TemporarymaxValidators int
 	// var tat int64
 	// var newunit int64
-	//fmt.Printf("ctx=%+v\n", ctx)
+	// fmt.Printf("ctx=%+v\n", ctx)
 	maxValidators := params.MaxValidators
 	powerReduction := k.PowerReduction(ctx)
-	powerReduction2 := k.PowerReduction2(ctx)
+	// powerReduction2 := k.PowerReduction2(ctx)
 	totalPower := sdk.ZeroInt()
 	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdk.ZeroInt(), sdk.ZeroInt()
-	//fmt.Println("powerReduction2:", powerReduction2)
+	// fmt.Println("powerReduction2:", powerReduction2)
 	// Retrieve the last validator set.
 	// The persistent set is updated later in this function.
 	// (see LastValidatorPowerKey).
-	//last, err := k.getLastValidatorsByAddr(ctx)
-	last, err := k.getLastValidatorsNewByAddr(ctx)
+	last, err := k.getLastValidatorsByAddr(ctx)
+	// fmt.Println("last:", last)
+	// last, err := k.getLastValidatorsNewByAddr(ctx)
 	if err != nil {
 		return nil, err
 	}
 	/*
 	 * accounts_address  That is, the account address returned from the event log is converted into the corresponding validator_ Addresses, and then replace POS
 	 */
-	//Create valaddress from bech32 string
+	// Create valaddress from bech32 string
 
 	// delegator_address := "eth1ujuwccre5kadumtlcae7dy5z96k2xqyv7lpp0h"
 	// account_address, _ := sdk.AccAddressFromBech32(delegator_address)
@@ -343,231 +784,891 @@ func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.AB
 	// validator_address := sdk.ValAddress(account_address).String()
 	// fmt.Printf("validator_address:%v\n", validator_address)
 
-	//k.SetValidatorByPowerIndex(ctx, validator)
+	// k.SetValidatorByPowerIndex(ctx, validator)
 	// Iterate over validators, highest power to lowest.  Iterative verifier, from highest power to lowest power
+	// listsupervalidator, listvalidator := k.CombinedSliceList(ctx, iterator, maxValidators, log)
+	// newselectlist := SelectList(listsupervalidator, listvalidator)
+	fmt.Println("log:", log)
+	for _, eventlog := range log {
+		if eventlog.MsgIndex == 1 {
+			iterator := k.ValidatorsPowerStoreIterator(ctx)
+			defer iterator.Close()
+			// Tatiterator := k.ValidatorsNewPowerStoreIterator(ctx)
+			// defer Tatiterator.Close()
+			listsupervalidator, listvalidator := k.CombinedSliceList(ctx, iterator, maxValidators, log)
+			newselectlist := SelectList(listsupervalidator, listvalidator, req)
+			// newlist := make(map[string]string, len(newselectlist))
+			// for _, value := range newselectlist {
+			// 	newlist[value] = value
+			// }
+			k.DeletsNewItreator2(ctx, maxValidators, newselectlist)
+			// fmt.Println("删除iterator迭代器:", newselectlist)
 
-	iterator := k.ValidatorsPowerStoreIterator(ctx)
-	//TatIterator := k.ValidatorsNewPowerStoreIterator(ctx)
-	//iterator := k.ValidatorsNewPowerStoreIterator(ctx)
-	defer iterator.Close()
-	//defer TatIterator.Close()
-	//fmt.Println("iterator:", iterator)
-	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
-		// everything that is iterated in this loop is becoming or already a
-		// part of the bonded validator set
-		//fmt.Printf("iterator.Value:%v\n", iterator.Value())
-		valAddr := sdk.ValAddress(iterator.Value())
-		//fmt.Println("valAddr:", valAddr)
-		//validatorstring := valAddr.String()
-		//fmt.Printf("validatorstring:%+v\n", validatorstring)
-		// tat := int64(120000000000)
-		// newunit := int64(120000000000)
-		// var tat int64
-		// var newunit int64
-		var tat sdk.Int
-		var newunit sdk.Int
+			newTatiteratorlist := make(map[string]string)
+			NewTatiterator := k.ValidatorsNewPowerStoreIterator(ctx)
+			defer NewTatiterator.Close()
+			for count := 0; NewTatiterator.Valid() && count < int(maxValidators); NewTatiterator.Next() {
+				// everything that is iterated in this loop is becoming or already a
+				// part of the bonded validator set
+				valAddr := sdk.ValAddress(NewTatiterator.Value())
+				validator := k.mustGetValidator(ctx, valAddr)
 
-		for _, eventlog := range log {
-			if eventlog.MsgIndex == 1 {
-				asslog := []byte(eventlog.Log)
-				err := json.Unmarshal(asslog, &Data)
-				if err != nil {
-					fmt.Println("error:", err)
+				if validator.Jailed {
+					panic("should never retrieve a jailed validator from the power store")
 				}
-				for index, vlog := range Data {
-					fmt.Printf("Conversion of account address to verifier address :%+v\n", vlog[0].(string))
-					a := []byte(vlog[0].(string))
-					c := string(a[2:])
-					s := strings.ToUpper(c)
-					NewValidatoradd, _ := sdk.ValAddressFromHex(s)
-					fmt.Println("index", index)
-					//state 1 TAT;2 unit
-					state := int64(vlog[2].(float64) * math.Pow10(int(0)))
-					fmt.Println("state:", state)
-					fmt.Println(reflect.TypeOf(vlog[2]))
-					if state == int64(1) {
-						//Now convert the data in the log to string, and then convert the string to int type
-						fmt.Println(reflect.TypeOf(vlog[1]))
-						stringtat := strconv.FormatFloat(vlog[1].(float64), 'f', -1, 64)
-						fmt.Println("stringtat:", stringtat)
-						tat, _ = sdk.NewIntFromString(stringtat)
-						//tat = int64(vlog[1].(float64) * math.Pow10(int(10)))
-						//newunit = int64(vlog[1].(float64) * math.Pow10(int(10)))
-						stringunit := strconv.FormatFloat(vlog[1].(float64), 'f', -1, 64)
-						fmt.Println("stringunit:", stringunit)
-						newunit, _ = sdk.NewIntFromString(stringunit)
-						newtat, _ := tat.MarshalJSON()
-						newunitbyte, _ := newunit.MarshalJSON()
-						fmt.Println("newtat:", newtat)
-						fmt.Println("newunitbyte:", newunitbyte)
-						k.SetTat2(ctx, newtat, NewValidatoradd)
-						k.SetNewToken2(ctx, newunitbyte, NewValidatoradd)
-					} else {
-						//tat = int64(0)
-						tat = sdk.ZeroInt()
-						//newunit = int64(vlog[1].(float64) * math.Pow10(int(10)))
-						stringunit := strconv.FormatFloat(vlog[1].(float64), 'f', -1, 64)
-						fmt.Println("stringunit:", stringunit)
-						newunit, _ = sdk.NewIntFromString(stringunit)
-						newtat, _ := tat.MarshalJSON()
-						newunitbyte, _ := newunit.MarshalJSON()
-						fmt.Println("newtat:", newtat)
-						fmt.Println("newunitbyte:", newunitbyte)
-						k.SetTat2(ctx, newtat, NewValidatoradd)
-						k.SetNewToken2(ctx, newunitbyte, NewValidatoradd)
+				// if we get to a zero-power validator (which we don't bond),
+				// there are no more possible bonded validators
+				if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
+					break
+				}
+
+				// apply the appropriate state change if necessary
+				switch {
+				case validator.IsUnbonded():
+					validator, err = k.unbondedToBonded(ctx, validator)
+					if err != nil {
+						return
 					}
-					fmt.Println("tat:", tat)
-					fmt.Println("newunit:", newunit)
-					// k.SetTat(ctx, tat, NewValidatoradd)
-					// k.SetNewToken(ctx, newunit, NewValidatoradd)
-					// newtat, _ := tat.MarshalJSON()
-					// newunitbyte, _ := newunit.MarshalJSON()
-					// fmt.Println("newtat:", newtat)
-					// fmt.Println("newunitbyte:", newunitbyte)
-					// k.SetTat2(ctx, newtat, NewValidatoradd)
-					// k.SetNewToken2(ctx, newunitbyte, NewValidatoradd)
+					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+				case validator.IsUnbonding():
+					validator, err = k.unbondingToBonded(ctx, validator)
+					if err != nil {
+						return
+					}
+					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+				case validator.IsBonded():
+					// no state change
+				default:
+					panic("unexpected validator status")
 				}
+				// fetch the old power bytes
+				valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+				if err != nil {
+					return nil, err
+				}
+				oldPowerBytes, found := last[valAddrStr]
+				newPower := validator.ConsensusPower(powerReduction)
+				newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
+				newPower2 := validator.ConsensusTatPower(powerReduction)
+				newunitPower := validator.ConsensusNewPower(powerReduction)
+				k.SetTatPower(ctx, newPower2, valAddr)
+				k.SetNewUnitPower(ctx, newunitPower, valAddr)
+				if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+					updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+
+					k.SetLastValidatorPower(ctx, valAddr, newPower)
+				}
+				delete(last, valAddrStr)
+				count++
+				newTatiteratorlist[valAddrStr] = valAddrStr
+				totalPower = totalPower.Add(sdk.NewInt(newPower))
 			}
-		}
 
-		//tatInt := sdk.NewInt(newtat)
-		//newunitInt := sdk.NewInt(newunit)
-		//Save the value of the corresponding verifier Tat and the value of unit
-		// k.SetTat(ctx, tat, valAddr)
-		// k.SetNewToken(ctx, newunit, valAddr)
-		validator := k.mustGetValidator(ctx, valAddr)
-
-		fmt.Printf("validator:%+v\n", validator)
-		//Prove whether you are imprisoned by judging the jailed in validator struct
-		if validator.Jailed {
-			panic("should never retrieve a jailed validator from the power store")
-		}
-		// if we get to a zero-power validator (which we don't bond)
-		// there are no more possible bonded validators
-		if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
-			break
-		}
-
-		// apply the appropriate state change if necessary
-		/*Validators can have the following three statuses:
-
-		*Unbound, the verifier is not in the active collection, and cannot sign blocks and get rewards. They can receive delegates
-
-		*Bind bound. Once the verifier receives enough binding tokens, they will automatically join the active collection at endblock, and their status will be updated to bound. This is to sign blocks and receive rewards. They can continue to be entrusted and will be deducted when they make mistakes. When the principal wants to unbind the agent (withdraw), it needs to wait until the unbinding time (specific parameters of the chain). During the unbinding time period, if the verifier makes a mistake, the corresponding bound token will also be deducted
-
-		*Unbound. When the verifier leaves the active collection, whether it is due to automatic exit or money deduction, the unbonding of all principals begins. They must wait for the unboundingtime to receive their tokens from the bondedpool
-		 */
-		switch {
-		case validator.IsUnbonded():
-			validator, err = k.unbondedToBonded(ctx, validator)
+			noLongerBonded, err := sortNoLongerBonded(last)
 			if err != nil {
-				return
+				return nil, err
 			}
-			amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
-		case validator.IsUnbonding():
-			validator, err = k.unbondingToBonded(ctx, validator)
+
+			for _, valAddrBytes := range noLongerBonded {
+				validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
+				validator, err = k.bondedToUnbonding(ctx, validator)
+				if err != nil {
+					return nil, err
+				}
+				amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
+				k.DeleteLastValidatorPower(ctx, validator.GetOperator())
+				updates = append(updates, validator.ABCIValidatorUpdateZero())
+			}
+
+			// Update the pools based on the recent updates in the validator set:
+			// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred
+			// to the Bonded pool.
+			// - The tokens from the bonded validators that are being kicked out from the validator set
+			// need to be transferred to the NotBonded pool.
+			switch {
+			// Compare and subtract the respective amounts to only perform one transfer.
+			// This is done in order to avoid doing multiple updates inside each iterator/loop.
+			case amtFromNotBondedToBonded.GT(amtFromBondedToNotBonded):
+				k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded))
+			case amtFromNotBondedToBonded.LT(amtFromBondedToNotBonded):
+				k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded))
+			default: // equal amounts of tokens; no update required
+			}
+		} else if eventlog.MsgIndex == 2 {
+			newTatiteratorlist := make(map[string]string)
+			NewTatiterator := k.ValidatorsNewPowerStoreIterator(ctx)
+			defer NewTatiterator.Close()
+			for count := 0; NewTatiterator.Valid() && count < int(maxValidators); NewTatiterator.Next() {
+				// everything that is iterated in this loop is becoming or already a
+				// part of the bonded validator set
+				valAddr := sdk.ValAddress(NewTatiterator.Value())
+				// fetch the old power bytes
+				valAddrStr, _ := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+				newTatiteratorlist[valAddrStr] = valAddrStr
+			}
+			iterator := k.ValidatorsPowerStoreIterator(ctx)
+			defer iterator.Close()
+			// k.DeleteNewIterator(ctx)
+			for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+				// everything that is iterated in this loop is becoming or already a
+				// part of the bonded validator set
+				valAddr := sdk.ValAddress(iterator.Value())
+				validator := k.mustGetValidator(ctx, valAddr)
+				if validator.Jailed {
+					panic("should never retrieve a jailed validator from the power store")
+				}
+
+				// if we get to a zero-power validator (which we don't bond),
+				// there are no more possible bonded validators
+				if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
+					break
+				}
+
+				// apply the appropriate state change if necessary
+				// switch {
+				// case validator.IsUnbonded():
+				// 	validator, err = k.unbondedToBonded(ctx, validator)
+				// 	if err != nil {
+				// 		return
+				// 	}
+				// 	amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+				// case validator.IsUnbonding():
+				// 	validator, err = k.unbondingToBonded(ctx, validator)
+				// 	if err != nil {
+				// 		return
+				// 	}
+				// 	amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+				// case validator.IsBonded():
+				// 	// no state change
+				// default:
+				// 	panic("unexpected validator status")
+				// }
+				// fetch the old power bytes
+				valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+				if err != nil {
+					return nil, err
+				}
+				// oldPowerBytes, found := last[valAddrStr]
+				oldPowerBytes := last[valAddrStr]
+				_, ok := newTatiteratorlist[valAddrStr]
+				newPower := validator.ConsensusPower(powerReduction)
+				newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
+				// update the validator set if power has changed
+				// if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+				// 	updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+
+				// 	k.SetLastValidatorPower(ctx, valAddr, newPower)
+				// }
+				if !bytes.Equal(oldPowerBytes, newPowerBytes) {
+					updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+
+					k.SetLastValidatorPower(ctx, valAddr, newPower)
+				}
+				if ok {
+					totalPower = totalPower.Add(sdk.NewInt(newPower))
+					delete(last, valAddrStr)
+				}
+				// fmt.Println("测试last", last)
+				// delete(last, valAddrStr)
+				count++
+
+				// totalPower = totalPower.Add(sdk.NewInt(newPower))
+			}
+			noLongerBonded, err := sortNoLongerBonded(last)
 			if err != nil {
-				return
+				return nil, err
 			}
-			amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
-		case validator.IsBonded():
-			// no state change
-		default:
-			panic("unexpected validator status")
+
+			for _, valAddrBytes := range noLongerBonded {
+				validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
+				validator, err = k.bondedToUnbonding(ctx, validator)
+				if err != nil {
+					return nil, err
+				}
+				amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
+				k.DeleteLastValidatorPower(ctx, validator.GetOperator())
+				updates = append(updates, validator.ABCIValidatorUpdateZero())
+			}
+
+			// Update the pools based on the recent updates in the validator set:
+			// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred
+			// to the Bonded pool.
+			// - The tokens from the bonded validators that are being kicked out from the validator set
+			// need to be transferred to the NotBonded pool.
+			switch {
+			// Compare and subtract the respective amounts to only perform one transfer.
+			// This is done in order to avoid doing multiple updates inside each iterator/loop.
+			case amtFromNotBondedToBonded.GT(amtFromBondedToNotBonded):
+				k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded))
+			case amtFromNotBondedToBonded.LT(amtFromBondedToNotBonded):
+				k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded))
+			default: // equal amounts of tokens; no update required
+			}
+
+			// // set total power on lookup index if there are any updates
+			// if len(updates) > 0 {
+			// 	k.SetLastTotalPower(ctx, totalPower)
+			// }
+		} else {
+			// Iterate over validators, highest power to lowest.
+			iterator := k.ValidatorsPowerStoreIterator(ctx)
+			defer iterator.Close()
+
+			for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+				// everything that is iterated in this loop is becoming or already a
+				// part of the bonded validator set
+				valAddr := sdk.ValAddress(iterator.Value())
+				validator := k.mustGetValidator(ctx, valAddr)
+				if validator.Jailed {
+					panic("should never retrieve a jailed validator from the power store")
+				}
+				// if we get to a zero-power validator (which we don't bond),
+				// there are no more possible bonded validators
+				if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
+					break
+				}
+
+				// apply the appropriate state change if necessary
+				switch {
+				case validator.IsUnbonded():
+					validator, err = k.unbondedToBonded(ctx, validator)
+					if err != nil {
+						return
+					}
+					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+				case validator.IsUnbonding():
+					validator, err = k.unbondingToBonded(ctx, validator)
+					if err != nil {
+						return
+					}
+					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+				case validator.IsBonded():
+					// no state change
+				default:
+					panic("unexpected validator status")
+				}
+				// fetch the old power bytes
+				valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+				if err != nil {
+					return nil, err
+				}
+				oldPowerBytes, found := last[valAddrStr]
+				newPower := validator.ConsensusPower(powerReduction)
+				newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
+				// update the validator set if power has changed
+				if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+					updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+
+					k.SetLastValidatorPower(ctx, valAddr, newPower)
+				}
+				delete(last, valAddrStr)
+				count++
+
+				totalPower = totalPower.Add(sdk.NewInt(newPower))
+			}
+
+			noLongerBonded, err := sortNoLongerBonded(last)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, valAddrBytes := range noLongerBonded {
+				validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
+				validator, err = k.bondedToUnbonding(ctx, validator)
+				if err != nil {
+					return nil, err
+				}
+				amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
+				k.DeleteLastValidatorPower(ctx, validator.GetOperator())
+				updates = append(updates, validator.ABCIValidatorUpdateZero())
+			}
+
+			// Update the pools based on the recent updates in the validator set:
+			// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred
+			// to the Bonded pool.
+			// - The tokens from the bonded validators that are being kicked out from the validator set
+			// need to be transferred to the NotBonded pool.
+			switch {
+			// Compare and subtract the respective amounts to only perform one transfer.
+			// This is done in order to avoid doing multiple updates inside each iterator/loop.
+			case amtFromNotBondedToBonded.GT(amtFromBondedToNotBonded):
+				k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded))
+			case amtFromNotBondedToBonded.LT(amtFromBondedToNotBonded):
+				k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded))
+			default: // equal amounts of tokens; no update required
+			}
+
+			// // set total power on lookup index if there are any updates
+			// if len(updates) > 0 {
+			// 	k.SetLastTotalPower(ctx, totalPower)
+			// }
 		}
-
-		// fetch the old power bytes
-		valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
-		//newvalAddrStr, _ := sdk.ValAddressFromBech32(valAddrStr)
-		//newValidator, _ := k.GetValidator(ctx, newvalAddrStr)
-
-		fmt.Println("valAddrStr", valAddrStr)
-		if err != nil {
-			return nil, err
-		}
-		oldPowerBytes, found := last[valAddrStr]
-		//newPower := validator.ConsensusPower(powerReduction)
-		newPower2 := validator.ConsensusTatPower(powerReduction2)
-		newPower := validator.ConsensusNewsPower(powerReduction)
-		newunitPower := validator.ConsensusNewPower(powerReduction)
-		k.SetTatPower(ctx, newPower2, valAddr)
-		k.SetNewUnitPower(ctx, newunitPower, valAddr)
-		//newPower := validator.ConsensusNewPower(powerReduction)
-		//Accumulate tatpower
-		// contatpower := params.TatTokens
-		// contatpower += newPower2
-		// params.TatTokens = contatpower
-		// k.SetParams(ctx, params)
-		newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
-		// update the validator set if power has changed
-		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
-			updates = append(updates, validator.ABCIValidatorNewUpdate(powerReduction))
-			k.SetLastValidatorPower(ctx, valAddr, newPower)
-		}
-
-		delete(last, valAddrStr)
-		count++
-
-		totalPower = totalPower.Add(sdk.NewInt(newPower))
-		fmt.Println("totalPowerold:", totalPower)
 	}
-	// apply the appropriate state change if necessary
-	noLongerBonded, err := sortNoLongerBonded(last)
-	if err != nil {
-		return nil, err
-	}
-
-	// noLongerTatBonded, err := sortNoLongerBonded(lasttat)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	for _, valAddrBytes := range noLongerBonded {
-		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
-		validator, err = k.bondedToUnbonding(ctx, validator)
-		if err != nil {
-			return
-		}
-		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
-		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
-		updates = append(updates, validator.ABCIValidatorUpdateZero())
-		fmt.Println("updates:", updates)
-	}
-
-	// for _, valAddrBytes := range noLongerTatBonded {
-	// 	validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
-	// 	validator, err = k.bondedToUnbonding(ctx, validator)
-	// 	if err != nil {
-	// 		return
-	// 	}
-	// 	amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTatTokens())
-	// 	k.DeleteLastValidatorTatPower(ctx, validator.GetOperator())
-	// 	updates = append(updates, validator.ABCIValidatorUpdateZero())
-	// 	fmt.Println("tatupdates:", updates)
-	// }
-	// Update the pools based on the recent updates in the validator set:
-	// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred
-	// to the Bonded pool.
-	// - The tokens from the bonded validators that are being kicked out from the validator set
-	// need to be transferred to the NotBonded pool.
-	switch {
-	// Compare and subtract the respective amounts to only perform one transfer.
-	// This is done in order to avoid doing multiple updates inside each iterator/loop.
-	case amtFromNotBondedToBonded.GT(amtFromBondedToNotBonded):
-		k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded))
-	case amtFromNotBondedToBonded.LT(amtFromBondedToNotBonded):
-		k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded))
-	default: // equal amounts of tokens; no update required
-	}
-
 	// set total power on lookup index if there are any updates
 	if len(updates) > 0 {
 		k.SetLastTotalPower(ctx, totalPower)
-		//k.SetLastTatTotalPower(ctx, TattotalPower)
 	}
-	fmt.Println("updates:", updates)
 	return updates, err
 }
+
+/********bid v2.0.0********/
+
+// 测试bid方法
+// func (k Keeper) NewApplyAndReturnValidatorSetUpdates(ctx sdk.Context, log sdk.ABCIMessageLogs) (updates []abci.ValidatorUpdate, err error) {
+// 	params := k.GetParams(ctx)
+// 	var Data [][]interface{}
+// 	// var Mine []string
+// 	// var ListSuperValidator []string
+// 	// var ListValidator []string
+// 	// var TemporarymaxValidators int
+// 	// var tat int64
+// 	// var newunit int64
+// 	// fmt.Printf("ctx=%+v\n", ctx)
+// 	maxValidators := params.MaxValidators
+// 	powerReduction := k.PowerReduction(ctx)
+// 	// powerReduction2 := k.PowerReduction2(ctx)
+// 	totalPower := sdk.ZeroInt()
+// 	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdk.ZeroInt(), sdk.ZeroInt()
+// 	// fmt.Println("powerReduction2:", powerReduction2)
+// 	// Retrieve the last validator set.
+// 	// The persistent set is updated later in this function.
+// 	// (see LastValidatorPowerKey).
+// 	last, err := k.getLastValidatorsByAddr(ctx)
+// 	// fmt.Println("last:", last)
+// 	// last, err := k.getLastValidatorsNewByAddr(ctx)
+// 	fmt.Println("last:", last)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	/*
+// 	 * accounts_address  That is, the account address returned from the event log is converted into the corresponding validator_ Addresses, and then replace POS
+// 	 */
+// 	// Create valaddress from bech32 string
+
+// 	// delegator_address := "eth1ujuwccre5kadumtlcae7dy5z96k2xqyv7lpp0h"
+// 	// account_address, _ := sdk.AccAddressFromBech32(delegator_address)
+// 	// fmt.Printf("account_address:%v\n", account_address)
+// 	gasUsed := ctx.BlockGasMeter().GasConsumed()
+// 	fmt.Println("EndBlock Monitor the usage of gas:", gasUsed)
+// 	// validator, _ := sdk.ValAddressFromBech32(delegator_address)
+// 	// fmt.Printf("validator:%v\n", validator)
+// 	// validator_address := sdk.ValAddress(account_address).String()
+// 	// fmt.Printf("validator_address:%v\n", validator_address)
+
+// 	// k.SetValidatorByPowerIndex(ctx, validator)
+// 	// Iterate over validators, highest power to lowest.  Iterative verifier, from highest power to lowest power
+
+// 	iterator := k.ValidatorsPowerStoreIterator(ctx)
+// 	// TatIterator := k.ValidatorsNewPowerStoreIteratorValidatorsNewPowerStoreIterator(ctx)
+// 	// iterator := k.ValidatorsNewPowerStoreIterator(ctx)
+// 	defer iterator.Close()
+// 	// listsupervalidator, listvalidator := k.CombinedSliceList(ctx, iterator, maxValidators, log)
+// 	// newselectlist := SelectList(listsupervalidator, listvalidator)
+// 	fmt.Println("log:", log)
+// 	for _, eventlog := range log {
+// 		if eventlog.MsgIndex == 1 {
+// 			asslog := []byte(eventlog.Log)
+// 			err := json.Unmarshal(asslog, &Data)
+// 			if err != nil {
+// 				fmt.Println("error:", err)
+// 				return nil, err
+// 			}
+// 			listsupervalidator, listvalidator := k.CombinedSliceList(ctx, iterator, maxValidators, log)
+// 			fmt.Println("listsupervalidatoe:", listsupervalidator)
+// 			fmt.Println("listvalidator", listvalidator)
+// 			newselectlist := SelectList(listsupervalidator, listvalidator)
+// 			fmt.Println("生成新的迭代器:", 123)
+// 			k.DeleteNewIterator(ctx)
+// 			iterator := k.ValidatorsPowerStoreIterator(ctx)
+// 			defer iterator.Close()
+// 			for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+// 				// everything that is iterated in this loop is becoming or already a
+// 				// part of the bonded validator set
+// 				// fmt.Printf("iterator.Value:%v\n", iterator.Value())
+// 				valAddr := sdk.ValAddress(iterator.Value())
+// 				// fmt.Println("valAddr:", valAddr)
+// 				validator := k.mustGetValidator(ctx, valAddr)
+// 				validatorstring := valAddr.String()
+// 				fmt.Printf("validatorstring:%+v\n", validatorstring)
+// 				if validator.Jailed {
+// 					panic("should never retrieve a jailed validator from the power store")
+// 				}
+
+// 				// if we get to a zero-power validator (which we don't bond),
+// 				// there are no more possible bonded validators
+// 				if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
+// 					break
+// 				}
+// 				// fmt.Println("测试步骤", 123)
+// 				if len(newselectlist) > 0 {
+// 					fmt.Println("newselectlist:", newselectlist)
+// 					for _, value := range newselectlist {
+// 						Tatvaladdr, _ := sdk.ValAddressFromBech32(value)
+// 						Tatvalidator := k.mustGetValidator(ctx, Tatvaladdr)
+// 						k.AddNewIterator(ctx, Tatvalidator)
+// 					}
+// 				} else {
+// 					k.AddNewIterator(ctx, validator)
+// 				}
+// 				//	for _, value := range newselectlist {
+// 				//		if validatorstring == value {
+// 				switch {
+// 				case validator.IsUnbonded():
+// 					validator, _ = k.unbondedToBonded(ctx, validator)
+
+// 					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 				case validator.IsUnbonding():
+// 					validator, _ = k.unbondingToBonded(ctx, validator)
+
+// 					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 				case validator.IsBonded():
+// 					// no state change
+// 				default:
+// 					panic("unexpected validator status")
+// 				}
+// 				//		}
+// 				//	}
+// 				// fmt.Printf("validator:%+v\n", validator)
+// 				// fetch the old power bytes
+// 				valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+// 				fmt.Println("valAddrStr1:", valAddrStr)
+// 				// newvalAddrStr, _ := sdk.ValAddressFromBech32(valAddrStr)
+// 				// newValidator, _ := k.GetValidator(ctx, newvalAddrStr)
+
+// 				// fmt.Println("valAddrStr", valAddrStr)
+// 				if err != nil {
+// 					return nil, err
+// 				}
+// 				oldPowerBytes, found := last[valAddrStr]
+// 				fmt.Println("oldPowerBytes", oldPowerBytes)
+// 				newPower := validator.ConsensusPower(powerReduction)
+// 				newPower2 := validator.ConsensusTatPower(powerReduction)
+// 				newunitPower := validator.ConsensusNewPower(powerReduction)
+// 				k.SetTatPower(ctx, newPower2, valAddr)
+// 				k.SetNewUnitPower(ctx, newunitPower, valAddr)
+
+// 				k.SetNewValidatorByPowerIndex(ctx, validator)
+// 				// newPower := validator.ConsensusNewPower(powerReduction)
+// 				// Accumulate tatpower
+// 				// contatpower := params.TatTokens
+// 				// contatpower += newPower2
+// 				// params.TatTokens = contatpower
+// 				// k.SetParams(ctx, params)
+// 				newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
+// 				// update the validator set if power has changed
+// 				if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+// 					updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+// 					k.SetLastValidatorPower(ctx, valAddr, newPower)
+// 				}
+// 				fmt.Println("last1:", last)
+// 				delete(last, valAddrStr)
+// 				count++
+
+// 				totalPower = totalPower.Add(sdk.NewInt(newPower))
+// 				fmt.Println("totalPowerold开始监听:", totalPower)
+// 			}
+// 		} else {
+// 			// fmt.Println("Mine判断:", Mine)
+// 			// if len(Mine) == 0 {
+// 			// TatTestIterator := k.ValidatorsPowerStoreIterator(ctx)
+// 			// fmt.Println("TatTestIterator.Valid():", TatTestIterator.Valid())
+// 			TatIterator := k.ValidatorsNewPowerStoreIterator(ctx)
+// 			fmt.Println("TatIterator:", TatIterator)
+// 			// iterator := k.ValidatorsNewPowerStoreIterator(ctx)
+// 			// fmt.Println("TatIterator.Valid():", TatIterator.Valid())
+// 			defer TatIterator.Close()
+// 			// fmt.Println("TatIterator.Valid():", TatIterator.Valid())
+// 			for count := 0; TatIterator.Valid() && count < int(maxValidators); TatIterator.Next() {
+// 				valAddr := sdk.ValAddress(TatIterator.Value())
+// 				validator := k.mustGetValidator(ctx, valAddr)
+// 				// fmt.Printf("TatIterator validator:%+v\n", validator)
+// 				if validator.Jailed {
+// 					k.DeleteValidatorByTatPowerIndex(ctx, validator)
+// 				}
+// 				//
+// 				// k.DeleteValidatorByTatPowerIndex2(ctx, validator)
+// 			}
+// 			Tat2Iterator := k.ValidatorsNewPowerStoreIterator(ctx)
+// 			defer Tat2Iterator.Close()
+// 			// fmt.Println("Tat2Iterator:", Tat2Iterator)
+// 			// fmt.Println("Tat2Iterator.Valid():", Tat2Iterator.Valid())
+// 			// for count := 0; count < int(maxValidators); Tat2Iterator.Next() {
+// 			for count := 0; Tat2Iterator.Valid() && count < int(maxValidators); Tat2Iterator.Next() {
+// 				// everything that is iterated in this loop is becoming or already a
+// 				// part of the bonded validator set
+// 				valAddr := sdk.ValAddress(Tat2Iterator.Value())
+// 				validator := k.mustGetValidator(ctx, valAddr)
+// 				fmt.Printf("validator:%+v\n", validator)
+// 				if validator.Jailed {
+// 					panic("should never retrieve a jailed validator from the power store")
+// 				}
+
+// 				// if we get to a zero-power validator (which we don't bond),
+// 				// there are no more possible bonded validators
+// 				if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
+// 					break
+// 				}
+
+// 				// apply the appropriate state change if necessary
+// 				switch {
+// 				case validator.IsUnbonded():
+// 					validator, err = k.unbondedToBonded(ctx, validator)
+// 					if err != nil {
+// 						return
+// 					}
+// 					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 				case validator.IsUnbonding():
+// 					validator, err = k.unbondingToBonded(ctx, validator)
+// 					if err != nil {
+// 						return
+// 					}
+// 					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 				case validator.IsBonded():
+// 					// no state change
+// 				default:
+// 					panic("unexpected validator status")
+// 				}
+// 				// fetch the old power bytes
+// 				valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+// 				fmt.Println("valAddrStr2:", valAddrStr)
+// 				if err != nil {
+// 					return nil, err
+// 				}
+// 				oldPowerBytes, found := last[valAddrStr]
+// 				newPower := validator.ConsensusPower(powerReduction)
+// 				newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
+// 				// update the validator set if power has changed
+// 				if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+// 					updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+
+// 					k.SetLastValidatorPower(ctx, valAddr, newPower)
+// 				}
+// 				fmt.Println("测试last", last)
+// 				delete(last, valAddrStr)
+// 				count++
+
+// 				totalPower = totalPower.Add(sdk.NewInt(newPower))
+// 				fmt.Println("totalPowerold(不需要重新监听且为刚开始监听不到五分钟):", totalPower)
+// 			}
+// 			// } else {
+// 			// 	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+// 			// 		// everything that is iterated in this loop is becoming or already a
+// 			// 		// part of the bonded validator set
+// 			// 		//fmt.Printf("iterator.Value:%v\n", iterator.Value())
+// 			// 		valAddr := sdk.ValAddress(iterator.Value())
+// 			// 		// fmt.Println("valAddr:", valAddr)
+// 			// 		validator := k.mustGetValidator(ctx, valAddr)
+// 			// 		validatorstring := valAddr.String()
+// 			// 		fmt.Printf("validatorstring:%+v\n", validatorstring)
+// 			// 		if validator.Jailed {
+// 			// 			panic("should never retrieve a jailed validator from the power store")
+// 			// 		}
+
+// 			// 		// if we get to a zero-power validator (which we don't bond),
+// 			// 		// there are no more possible bonded validators
+// 			// 		if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
+// 			// 			break
+// 			// 		}
+// 			// 		for _, value := range Mine {
+// 			// 			if validatorstring == value {
+// 			// 				switch {
+// 			// 				case validator.IsUnbonded():
+// 			// 					validator, _ = k.unbondedToBonded(ctx, validator)
+
+// 			// 					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 			// 				case validator.IsUnbonding():
+// 			// 					validator, _ = k.unbondingToBonded(ctx, validator)
+
+// 			// 					amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 			// 				case validator.IsBonded():
+// 			// 					// no state change
+// 			// 				default:
+// 			// 					panic("unexpected validator status")
+// 			// 				}
+// 			// 			}
+// 			// 		}
+// 			// 		fmt.Printf("validator:%+v\n", validator)
+// 			// 		// fetch the old power bytes
+// 			// 		valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+// 			// 		//newvalAddrStr, _ := sdk.ValAddressFromBech32(valAddrStr)
+// 			// 		//newValidator, _ := k.GetValidator(ctx, newvalAddrStr)
+
+// 			// 		fmt.Println("valAddrStr", valAddrStr)
+// 			// 		if err != nil {
+// 			// 			return nil, err
+// 			// 		}
+// 			// 		oldPowerBytes, found := last[valAddrStr]
+// 			// 		newPower := validator.ConsensusPower(powerReduction)
+// 			// 		newPower2 := validator.ConsensusTatPower(powerReduction)
+// 			// 		newunitPower := validator.ConsensusNewPower(powerReduction)
+// 			// 		k.SetTatPower(ctx, newPower2, valAddr)
+// 			// 		k.SetNewUnitPower(ctx, newunitPower, valAddr)
+// 			// 		//newPower := validator.ConsensusNewPower(powerReduction)
+// 			// 		//Accumulate tatpower
+// 			// 		// contatpower := params.TatTokens
+// 			// 		// contatpower += newPower2
+// 			// 		// params.TatTokens = contatpower
+// 			// 		// k.SetParams(ctx, params)
+// 			// 		newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
+// 			// 		// update the validator set if power has changed
+// 			// 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+// 			// 			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+// 			// 			k.SetLastValidatorPower(ctx, valAddr, newPower)
+// 			// 		}
+
+// 			// 		delete(last, valAddrStr)
+// 			// 		count++
+
+// 			// 		totalPower = totalPower.Add(sdk.NewInt(newPower))
+// 			// 		fmt.Println("totalPowerold已经开始监听了且在五分钟内，不需要修改Min:", totalPower)
+
+// 			// 	}
+// 			// }
+// 		}
+// 	}
+
+// 	// defer TatIterator.Close()
+// 	// fmt.Println("iterator:", iterator)
+// 	// for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+// 	// 	// everything that is iterated in this loop is becoming or already a
+// 	// 	// part of the bonded validator set
+// 	// 	//fmt.Printf("iterator.Value:%v\n", iterator.Value())
+// 	// 	valAddr := sdk.ValAddress(iterator.Value())
+// 	// 	// fmt.Println("valAddr:", valAddr)
+// 	// 	validatorstring := valAddr.String()
+// 	// 	fmt.Printf("validatorstring:%+v\n", validatorstring)
+// 	// 	// tat := int64(120000000000)
+// 	// 	// newunit := int64(120000000000)
+// 	// 	// var tat int64
+// 	// 	// var newunit int64
+// 	// 	// var tat sdk.Int
+// 	// 	// var newunit sdk.Int
+// 	// 	// for _, eventlog := range log {
+// 	// 	// 	if eventlog.MsgIndex == 1 {
+// 	// 	// 		asslog := []byte(eventlog.Log)
+// 	// 	// 		err := json.Unmarshal(asslog, &Data)
+// 	// 	// 		if err != nil {
+// 	// 	// 			fmt.Println("error:", err)
+// 	// 	// 		}
+// 	// 	// 		if len(Data) == 0 {
+// 	// 	// 			Zero := sdk.ZeroInt()
+// 	// 	// 			NewZero, _ := Zero.MarshalJSON()
+// 	// 	// 			k.SetTat2(ctx, NewZero, valAddr)
+// 	// 	// 			k.SetNewToken2(ctx, NewZero, valAddr)
+// 	// 	// 		}
+// 	// 	// 		for index, vlog := range Data {
+// 	// 	// 			fmt.Printf("Conversion of account address to verifier address :%+v\n", vlog[0].(string))
+// 	//	//			a := []byte(vlog[0].(string))
+// 	//	//			c := string(a[2:])
+// 	//	//			s := strings.ToUpper(c)
+// 	// 	// 			NewValidatoradd, _ := sdk.ValAddressFromHex(s)
+// 	// 	// 			NewValidatoraddstring := NewValidatoradd.String()
+// 	// 	// 			ListSuperValidator = append(ListSuperValidator, NewValidatoraddstring)
+// 	// 	// 			if validatorstring != NewValidatoraddstring {
+// 	// 	// 				k.SetTat2(ctx, NewZero, valAddr)
+// 	// 	// 				k.SetNewToken2(ctx, NewZero, valAddr)
+// 	// 	// 				ListValidator = append(ListValidator, validatorstring)
+// 	// 	// 			}
+
+// 	// 	// 			fmt.Println("index", index)
+// 	// 	// 			fmt.Println("NewValidatoraddstring", NewValidatoraddstring)
+// 	// 	// 			//state 1 TAT;2 unit
+// 	// 	// 			state := int64(vlog[2].(float64) * math.Pow10(int(0)))
+// 	// 	// 			fmt.Println("state:", state)
+// 	// 	// 			fmt.Println(reflect.TypeOf(vlog[2]))
+// 	// 	// 			Zero := sdk.ZeroInt()
+// 	// 	// 			NewZero, _ := Zero.MarshalJSON()
+// 	// 	// 			//if state == int64(1) {
+// 	// 	// 			//Now convert the data in the log to string, and then convert the string to int type
+// 	// 	// 			fmt.Println(reflect.TypeOf(vlog[1]))
+// 	// 	// 			stringtat := strconv.FormatFloat(vlog[1].(float64), 'f', -1, 64)
+// 	// 	// 			fmt.Println("stringtat:", stringtat)
+// 	// 	// 			tat, _ = sdk.NewIntFromString(stringtat)
+// 	// 	// 			//tat = int64(vlog[1].(float64) * math.Pow10(int(10)))
+// 	// 	// 			//newunit = int64(vlog[1].(float64) * math.Pow10(int(10)))
+// 	// 	// 			stringunit := strconv.FormatFloat(vlog[1].(float64), 'f', -1, 64)
+// 	// 	// 			fmt.Println("stringunit:", stringunit)
+// 	// 	// 			newunit, _ = sdk.NewIntFromString(stringunit)
+// 	// 	// 			newtat, _ := tat.MarshalJSON()
+// 	// 	// 			newunitbyte, _ := newunit.MarshalJSON()
+// 	// 	// 			fmt.Println("newtat:", newtat)
+// 	// 	// 			fmt.Println("newunitbyte:", newunitbyte)
+// 	// 	// 			k.SetTat2(ctx, newtat, NewValidatoradd)
+// 	// 	// 			k.SetNewToken2(ctx, newunitbyte, NewValidatoradd)
+// 	// 	// 			//} else {
+// 	// 	// 			// //tat = int64(0)
+// 	// 	// 			// tat = sdk.ZeroInt()
+// 	// 	// 			// //newunit = int64(vlog[1].(float64) * math.Pow10(int(10)))
+// 	// 	// 			// stringunit := strconv.FormatFloat(vlog[1].(float64), 'f', -1, 64)
+// 	// 	// 			// fmt.Println("stringunit:", stringunit)
+// 	// 	// 			// newunit, _ = sdk.NewIntFromString(stringunit)
+// 	// 	// 			// newtat, _ := tat.MarshalJSON()
+// 	// 	// 			// newunitbyte, _ := newunit.MarshalJSON()
+// 	// 	// 			// fmt.Println("newtat:", newtat)
+// 	// 	// 			// fmt.Println("newunitbyte:", newunitbyte)
+// 	// 	// 			// k.SetTat2(ctx, newtat, NewValidatoradd)
+// 	// 	// 			// k.SetNewToken2(ctx, newunitbyte, NewValidatoradd)
+// 	// 	// 			//}
+// 	// 	// 			//Every time a new bid starts, the previous Tat needs to be set to 0
+// 	// 	// 			if validatorstring != NewValidatoraddstring {
+// 	// 	// 				k.SetTat2(ctx, NewZero, valAddr)
+// 	// 	// 				k.SetNewToken2(ctx, NewZero, valAddr)
+// 	// 	// 				ListValidator = append(ListValidator, validatorstring)
+// 	// 	// 			}
+// 	// 	// 			fmt.Println("tat:", tat)
+// 	// 	// 			fmt.Println("newunit:", newunit)
+
+// 	// 	// 			// k.SetTat(ctx, tat, NewValidatoradd)
+// 	// 	// 			// k.SetNewToken(ctx, newunit, NewValidatoradd)
+// 	// 	// 			// newtat, _ := tat.MarshalJSON()
+// 	// 	// 			// newunitbyte, _ := newunit.MarshalJSON()
+// 	// 	// 			// fmt.Println("newtat:", newtat)
+// 	// 	// 			// fmt.Println("newunitbyte:", newunitbyte)
+// 	// 	// 			// k.SetTat2(ctx, newtat, NewValidatoradd)
+// 	// 	// 			// k.SetNewToken2(ctx, newunitbyte, NewValidatoradd)
+// 	// 	// 		}
+// 	// 	// 	}
+// 	// 	// }
+// 	// 	//
+// 	// 	//tatInt := sdk.NewInt(newtat)
+// 	// 	//newunitInt := sdk.NewInt(newunit)
+// 	// 	//Save the value of the corresponding verifier Tat and the value of unit
+// 	// 	// k.SetTat(ctx, tat, valAddr)
+// 	// 	// k.SetNewToken(ctx, newunit, valAddr)
+// 	// 	validator := k.mustGetValidator(ctx, valAddr)
+// 	// 	k.SetValidatorByPowerIndex(ctx, validator)
+// 	// 	fmt.Printf("validator:%+v\n", validator)
+// 	// 	//Prove whether you are imprisoned by judging the jailed in validator struct
+// 	// 	if validator.Jailed {
+// 	// 		panic("should never retrieve a jailed validator from the power store")
+// 	// 	}
+// 	// 	// if we get to a zero-power validator (which we don't bond)
+// 	// 	// there are no more possible bonded validators
+// 	// 	if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
+// 	// 		break
+// 	// 	}
+
+// 	// 	// apply the appropriate state change if necessary
+// 	// 	/*Validators can have the following three statuses:
+
+// 	// 	*Unbound, the verifier is not in the active collection, and cannot sign blocks and get rewards. They can receive delegates
+
+// 	// 	*Bind bound. Once the verifier receives enough binding tokens, they will automatically join the active collection at endblock, and their status will be updated to bound. This is to sign blocks and receive rewards. They can continue to be entrusted and will be deducted when they make mistakes. When the principal wants to unbind the agent (withdraw), it needs to wait until the unbinding time (specific parameters of the chain). During the unbinding time period, if the verifier makes a mistake, the corresponding bound token will also be deducted
+
+// 	// 	*Unbound. When the verifier leaves the active collection, whether it is due to automatic exit or money deduction, the unbonding of all principals begins. They must wait for the unboundingtime to receive their tokens from the bondedpool
+// 	// 	 */
+// 	// 	switch {
+// 	// 	case validator.IsUnbonded():
+// 	// 		validator, err = k.unbondedToBonded(ctx, validator)
+// 	// 		if err != nil {
+// 	// 			return
+// 	// 		}
+// 	// 		amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 	// 	case validator.IsUnbonding():
+// 	// 		validator, err = k.unbondingToBonded(ctx, validator)
+// 	// 		if err != nil {
+// 	// 			return
+// 	// 		}
+// 	// 		amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+// 	// 	case validator.IsBonded():
+// 	// 		// no state change
+// 	// 	default:
+// 	// 		panic("unexpected validator status")
+// 	// 	}
+
+// 	// 	// fetch the old power bytes
+// 	// 	valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+// 	// 	//newvalAddrStr, _ := sdk.ValAddressFromBech32(valAddrStr)
+// 	// 	//newValidator, _ := k.GetValidator(ctx, newvalAddrStr)
+
+// 	// 	fmt.Println("valAddrStr", valAddrStr)
+// 	// 	if err != nil {
+// 	// 		return nil, err
+// 	// 	}
+// 	// 	oldPowerBytes, found := last[valAddrStr]
+// 	// 	//newPower := validator.ConsensusPower(powerReduction)
+// 	// 	newPower2 := validator.ConsensusTatPower(powerReduction)
+// 	// 	newPower := validator.ConsensusNewsPower(powerReduction)
+// 	// 	newunitPower := validator.ConsensusNewPower(powerReduction)
+// 	// 	k.SetTatPower(ctx, newPower2, valAddr)
+// 	// 	k.SetNewUnitPower(ctx, newunitPower, valAddr)
+// 	// 	//newPower := validator.ConsensusNewPower(powerReduction)
+// 	// 	//Accumulate tatpower
+// 	// 	// contatpower := params.TatTokens
+// 	// 	// contatpower += newPower2
+// 	// 	// params.TatTokens = contatpower
+// 	// 	// k.SetParams(ctx, params)
+// 	// 	newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
+// 	// 	// update the validator set if power has changed
+// 	// 	if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+// 	// 		updates = append(updates, validator.ABCIValidatorNewUpdate(powerReduction))
+// 	// 		k.SetLastValidatorPower(ctx, valAddr, newPower)
+// 	// 	}
+
+// 	// 	delete(last, valAddrStr)
+// 	// 	count++
+
+// 	// 	totalPower = totalPower.Add(sdk.NewInt(newPower))
+// 	// 	fmt.Println("totalPowerold:", totalPower)
+// 	// }
+// 	// apply the appropriate state change if necessary
+// 	noLongerBonded, err := sortNoLongerBonded(last)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	fmt.Println("noLongerBonded:", noLongerBonded)
+// 	// noLongerTatBonded, err := sortNoLongerBonded(lasttat)
+// 	// if err != nil {
+// 	// 	return nil, err
+// 	// }
+
+// 	for _, valAddrBytes := range noLongerBonded {
+// 		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
+// 		validator, err = k.bondedToUnbonding(ctx, validator)
+// 		if err != nil {
+// 			return
+// 		}
+// 		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
+// 		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
+// 		updates = append(updates, validator.ABCIValidatorUpdateZero())
+// 		fmt.Println("updates:", updates)
+// 	}
+
+// 	// for _, valAddrBytes := range noLongerTatBonded {
+// 	// 	validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
+// 	// 	validator, err = k.bondedToUnbonding(ctx, validator)
+// 	// 	if err != nil {
+// 	// 		return
+// 	// 	}
+// 	// 	amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTatTokens())
+// 	// 	k.DeleteLastValidatorTatPower(ctx, validator.GetOperator())
+// 	// 	updates = append(updates, validator.ABCIValidatorUpdateZero())
+// 	// 	fmt.Println("tatupdates:", updates)
+// 	// }
+// 	// Update the pools based on the recent updates in the validator set:
+// 	// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred
+// 	// to the Bonded pool.
+// 	// - The tokens from the bonded validators that are being kicked out from the validator set
+// 	// need to be transferred to the NotBonded pool.
+// 	switch {
+// 	// Compare and subtract the respective amounts to only perform one transfer.
+// 	// This is done in order to avoid doing multiple updates inside each iterator/loop.
+// 	case amtFromNotBondedToBonded.GT(amtFromBondedToNotBonded):
+// 		k.notBondedTokensToBonded(ctx, amtFromNotBondedToBonded.Sub(amtFromBondedToNotBonded))
+// 	case amtFromNotBondedToBonded.LT(amtFromBondedToNotBonded):
+// 		k.bondedTokensToNotBonded(ctx, amtFromBondedToNotBonded.Sub(amtFromNotBondedToBonded))
+// 	default: // equal amounts of tokens; no update required
+// 	}
+
+// 	// set total power on lookup index if there are any updates
+// 	if len(updates) > 0 {
+// 		k.SetLastTotalPower(ctx, totalPower)
+// 		// k.SetLastTatTotalPower(ctx, TattotalPower)
+// 	}
+// 	fmt.Println("updates:", updates)
+// 	return updates, err
+// }
+// 测试bid方法...
 
 // Validator state transitions
 
@@ -613,6 +1714,7 @@ func (k Keeper) jailValidator(ctx sdk.Context, validator types.Validator) {
 	validator.Jailed = true
 	k.SetValidator(ctx, validator)
 	k.DeleteValidatorByPowerIndex(ctx, validator)
+	k.DeleteValidatorByTatPowerIndex(ctx, validator)
 }
 
 // remove a validator from jail
@@ -624,19 +1726,21 @@ func (k Keeper) unjailValidator(ctx sdk.Context, validator types.Validator) {
 	validator.Jailed = false
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator)
+	k.SetNewValidatorByPowerIndex(ctx, validator)
 }
 
 // perform all the store operations for when a validator status becomes bonded 当验证器状态变为已绑定时，执行所有存储操作
 func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
 	// delete the validator by power index, as the key will change
 	k.DeleteValidatorByPowerIndex(ctx, validator)
+	// k.DeleteValidatorByTatPowerIndex(ctx, validator)
 
 	validator = validator.UpdateStatus(types.Bonded)
 
 	// save the now bonded validator record to the two referenced stores
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator)
-
+	// k.SetNewValidatorByPowerIndex(ctx, validator)
 	// delete from queue if present
 	k.DeleteValidatorQueue(ctx, validator)
 
@@ -656,7 +1760,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 
 	// delete the validator by power index, as the key will change
 	k.DeleteValidatorByPowerIndex(ctx, validator)
-
+	// k.DeleteValidatorByTatPowerIndex(ctx, validator)
 	// sanity check
 	if validator.Status != types.Bonded {
 		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
@@ -671,7 +1775,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	// save the now unbonded validator record and power index
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator)
-
+	// k.SetNewValidatorByPowerIndex(ctx, validator)
 	// Adds to unbonding validator queue
 	k.InsertUnbondingValidatorQueue(ctx, validator)
 
@@ -789,3 +1893,277 @@ func sortNoLongerBonded(last validatorsByAddr) ([][]byte, error) {
 
 	return noLongerBonded, nil
 }
+
+// Handle the list of tatvalidator and validator
+func CombinedSlice(iterator sdk.Iterator, maxValidators uint32, validatorsByAddr string) ([]string, []string) {
+	var ListSuperValidator []string
+	var ListValidator []string
+	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+		valAddr := sdk.ValAddress(iterator.Value())
+		// fmt.Println("valAddr:", valAddr)
+		validatorstring := valAddr.String()
+		if validatorstring != validatorsByAddr {
+			ListValidator = append(ListValidator, validatorstring)
+		} else {
+			ListSuperValidator = append(ListSuperValidator, validatorstring)
+		}
+	}
+	return ListSuperValidator, ListValidator
+}
+func (k Keeper) CombinedSliceList(ctx sdk.Context, iterator sdk.Iterator, maxValidators uint32, log sdk.ABCIMessageLogs) ([]string, []string) {
+	var Data [][]interface{}
+	ListSuperValidator := []string{}
+	ListValidator := []string{}
+	var tat sdk.Int
+	var newunit sdk.Int
+	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+		valAddr := sdk.ValAddress(iterator.Value())
+		// fmt.Println("valAddr:", valAddr)
+		validatorstring := valAddr.String()
+		for _, eventlog := range log {
+			if eventlog.MsgIndex == 1 {
+				asslog := []byte(eventlog.Log)
+				err := json.Unmarshal(asslog, &Data)
+				if err != nil {
+					fmt.Println("error:", err)
+				}
+				if len(Data) == 0 {
+					Zero := sdk.ZeroInt()
+					NewZero, _ := Zero.MarshalJSON()
+					k.SetTat2(ctx, NewZero, valAddr)
+					k.SetNewToken2(ctx, NewZero, valAddr)
+				} else {
+					for _, vlog := range Data {
+						fmt.Printf("Conversion of account address to verifier address :%+v\n", vlog[0].(string))
+						a := []byte(vlog[0].(string))
+						c := string(a[2:])
+						s := strings.ToUpper(c)
+						NewValidatoradd, _ := sdk.ValAddressFromHex(s)
+						NewValidatoraddstring := NewValidatoradd.String()
+						fmt.Printf("CombinedSliceList validatorstring :%+v\n", validatorstring)
+						fmt.Printf("CombinedSliceList NewValidatoraddstring :%+v\n", NewValidatoraddstring)
+						if validatorstring == NewValidatoraddstring {
+							//	ListSuperValidator = append(ListValidator, validatorstring)
+							ListSuperValidator = append(ListSuperValidator, validatorstring)
+							fmt.Printf("CombinedSliceList ListSuperValidator :%+v\n", ListSuperValidator)
+						}
+						fmt.Println(reflect.TypeOf(vlog[1]))
+						stringtat := strconv.FormatFloat(vlog[1].(float64), 'f', -1, 64)
+						fmt.Println("stringtat:", stringtat)
+						tat, _ = sdk.NewIntFromString(stringtat)
+						stringunit := strconv.FormatFloat(vlog[1].(float64), 'f', -1, 64)
+						fmt.Println("stringunit:", stringunit)
+						newunit, _ = sdk.NewIntFromString(stringunit)
+						newtat, _ := tat.MarshalJSON()
+						newunitbyte, _ := newunit.MarshalJSON()
+						fmt.Println("newtat:", newtat)
+						fmt.Println("newunitbyte:", newunitbyte)
+						k.SetTat2(ctx, newtat, NewValidatoradd)
+						k.SetNewToken2(ctx, newunitbyte, NewValidatoradd)
+					}
+				}
+
+			}
+		}
+		ListValidator = append(ListValidator, validatorstring)
+	}
+	return ListSuperValidator, ListValidator
+}
+func SelectList(listsupervalidator []string, listvalidator []string, req abci.RequestEndBlock) []string {
+	var Activelent int
+	var newlistsupervalidator []string
+	var newlistvalidator []string
+	var newvalidator []string
+	// newlistsupervalidator := []string{}
+	// newlistvalidator := []string{}
+	// newvalidator := []string{}
+	listval := SubtrDemo(listsupervalidator, listvalidator)
+	fmt.Println("SelectList SubtrDemo listval:", listval)
+	// Unitlen := len(listvalidator) - len(listsupervalidator)
+	// if len(listvalidator) >= 200 {
+	// 	Activelent = 100
+	// } else if len(listvalidator) >= 8 && len(listvalidator) < 200 {
+	// 	// Divide two int and round down by default
+	// 	Activelent = len(listvalidator) / 2
+	// 	fmt.Println("Activelent大于8小于200", Activelent)
+	// } else {
+	// 	Activelent = len(listvalidator)
+	// 	fmt.Println("Activelent小于8", Activelent)
+	// }
+	switch {
+	case len(listvalidator) >= 200:
+		Activelent = 100
+	case len(listvalidator) >= 8 && len(listvalidator) < 200:
+		Activelent = len(listvalidator) / 2
+		fmt.Println("Activelent大于8小于200", Activelent)
+	default:
+		Activelent = len(listvalidator)
+		fmt.Println("Activelent小于8", Activelent)
+	}
+	if len(listsupervalidator) >= 100 && len(listval) >= 100 {
+		newlistsupervalidator = listsupervalidator[:100]
+		newlistvalidator = listval[:100]
+		newvalidator = append(newlistsupervalidator, newlistvalidator...)
+	} else if len(listsupervalidator) < 100 && len(listval) < 100 {
+		newvalidator = append(listsupervalidator, listval...)
+	} else if len(listsupervalidator) < 100 && len(listval) > 100 {
+		num := 2*Activelent - len(listsupervalidator)
+		newlistvalidator = listval[:num]
+		newvalidator = append(listsupervalidator, newlistvalidator...)
+	} else if len(listsupervalidator) > 100 && len(listval) < 100 {
+		num := 2*Activelent - len(listval)
+		newlistsupervalidator = listsupervalidator[:num]
+		newvalidator = append(newlistsupervalidator, listval...)
+	}
+	// switch {
+	// case len(listsupervalidator) >= 100 && len(listval) >= 100:
+	// 	newlistsupervalidator = listsupervalidator[:100]
+	// 	newlistvalidator = listval[:100]
+	// 	newvalidator = append(newlistsupervalidator, newlistvalidator...)
+	// case len(listsupervalidator) < 100 && len(listval) < 100:
+	// 	newvalidator = append(listsupervalidator, listval...)
+	// case len(listsupervalidator) < 100 && len(listval) > 100:
+	// 	num := 2*Activelent - len(listsupervalidator)
+	// 	newlistvalidator = listval[:num]
+	// 	newvalidator = append(listsupervalidator, newlistvalidator...)
+	// default:
+	// 	num := 2*Activelent - len(listval)
+	// 	newlistsupervalidator = listsupervalidator[:num]
+	// 	newvalidator = append(newlistsupervalidator, listval...)
+	// }
+	MicsSliceList := MicsSlice(newvalidator, Activelent, req)
+	fmt.Println("新的vallist", MicsSliceList)
+	return MicsSliceList
+}
+func SubtrDemo(listsupervalidator []string, listvalidator []string) []string {
+	var removal []string
+	temp := map[string]struct{}{} // map[string]struct{}{}创建了一个key类型为String值类型为空struct的map，Equal -> make(map[string]struct{})
+
+	for _, val := range listsupervalidator {
+		if _, ok := temp[val]; !ok {
+			temp[val] = struct{}{} // 空struct 不占内存空间
+		}
+	}
+	for _, val := range listvalidator {
+		if _, ok := temp[val]; !ok {
+			removal = append(removal, val)
+		}
+	}
+
+	return removal
+}
+
+// random number
+func MicsSlice(origin []string, count int, req abci.RequestEndBlock) []string {
+	tmpOrigin := make([]string, len(origin))
+	copy(tmpOrigin, origin)
+	// 一定要seed
+	newheight := req.Height
+	// rand.Seed(time.Now().Unix())
+	rand.Seed(newheight)
+	rand.Shuffle(len(tmpOrigin), func(i int, j int) {
+		tmpOrigin[i], tmpOrigin[j] = tmpOrigin[j], tmpOrigin[i]
+	})
+	fmt.Println(tmpOrigin)
+	result := make([]string, 0, count)
+	for index, value := range tmpOrigin {
+		if index == count {
+			break
+		}
+		result = append(result, value)
+	}
+	return result
+}
+
+func (k Keeper) DeleteNewIterator(ctx sdk.Context) {
+	TatIterator := k.ValidatorsNewPowerStoreIterator(ctx)
+	// iterator := k.ValidatorsNewPowerStoreIterator(ctx)
+	defer TatIterator.Close()
+	for ; TatIterator.Valid(); TatIterator.Next() {
+		// everything that is iterated in this loop is becoming or already a
+		// part of the bonded validator set
+		// fmt.Printf("iterator.Value:%v\n", iterator.Value())
+		valAddr := sdk.ValAddress(TatIterator.Value())
+		// fmt.Println("valAddr:", valAddr)
+		validator := k.mustGetValidator(ctx, valAddr)
+		k.SetTatPower(ctx, int64(0), valAddr)
+		k.DeleteValidatorByTatPowerIndex(ctx, validator)
+	}
+}
+func (k Keeper) DeletsNewItreator2(ctx sdk.Context, maxValidators uint32, newselectlist []string) {
+	newlist := make(map[string]string, len(newselectlist))
+	newTatiteratorlist := make(map[string]string)
+	// iterator := k.ValidatorsPowerStoreIterator(ctx)
+	// defer iterator.Close()
+	for _, value := range newselectlist {
+		newlist[value] = value
+	}
+	NewTatiterator := k.ValidatorsNewPowerStoreIterator(ctx)
+	defer NewTatiterator.Close()
+	for count := 0; NewTatiterator.Valid() && count < int(maxValidators); NewTatiterator.Next() {
+		// everything that is iterated in this loop is becoming or already a
+		// part of the bonded validator set
+		valAddr := sdk.ValAddress(NewTatiterator.Value())
+		validator := k.mustGetValidator(ctx, valAddr)
+		// fetch the old power bytes
+		valAddrStr, _ := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+		newTatiteratorlist[valAddrStr] = valAddrStr
+		if len(newselectlist) > 0 {
+			_, found := newlist[valAddrStr]
+			if !found {
+				// valAddrBytes, _ := sdk.ValAddressFromBech32(valAddrStr)
+				// validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
+				k.DeleteValidatorByTatPowerIndex(ctx, validator)
+			}
+		}
+	}
+	for _, value := range newTatiteratorlist {
+		delete(newlist, value)
+	}
+	if len(newlist) > 0 {
+		for _, val := range newlist {
+			valAddrBytes, _ := sdk.ValAddressFromBech32(val)
+			validator := k.mustGetValidator(ctx, valAddrBytes)
+			k.SetNewValidatorByPowerIndex(ctx, validator)
+		}
+	}
+}
+
+func (k Keeper) AddNewIterator(ctx sdk.Context, validator types.Validator) {
+	k.SetNewValidatorByPowerIndex(ctx, validator)
+}
+
+// func (k Keeper) AddNewIterator2(ctx sdk.Context, iterator sdk.Iterator, maxValidators uint32, log sdk.ABCIMessageLogs) {
+// 	listsupervalidator, listvalidator := k.CombinedSliceList(ctx, iterator, maxValidators, log)
+// 	fmt.Println("listsupervalidatoe:", listsupervalidator)
+// 	fmt.Println("listvalidator", listvalidator)
+// 	newselectlist := SelectList(listsupervalidator, listvalidator)
+// 	fmt.Println("生成新的迭代器:", 123)
+// 	k.DeleteNewIterator(ctx)
+// 	if len(newselectlist) > 0 {
+// 		fmt.Println("newselectlist:", newselectlist)
+// 		for _, value := range newselectlist {
+// 			Tatvaladdr, _ := sdk.ValAddressFromBech32(value)
+// 			fmt.Println("生成新的迭代器22222222:", Tatvaladdr)
+// 			Tatvalidator := k.mustGetValidator(ctx, Tatvaladdr)
+// 			k.AddNewIterator(ctx, Tatvalidator)
+// 		}
+// 	}
+// }
+// func (k Keeper) AddNewIterator3(ctx sdk.Context, iterator sdk.Iterator, maxValidators uint32, log sdk.ABCIMessageLogs) {
+// 	listsupervalidator, listvalidator := k.CombinedSliceList(ctx, iterator, maxValidators, log)
+// 	fmt.Println("listsupervalidatoe:", listsupervalidator)
+// 	fmt.Println("listvalidator", listvalidator)
+// 	newselectlist := SelectList(listsupervalidator, listvalidator)
+// 	fmt.Println("生成新的迭代器:", 123)
+// 	k.DeleteNewIterator(ctx)
+// 	if len(newselectlist) > 0 {
+// 		fmt.Println("newselectlist:", newselectlist)
+// 		for _, value := range newselectlist {
+// 			Tatvaladdr, _ := sdk.ValAddressFromBech32(value)
+// 			fmt.Println("生成新的迭代器22222222:", Tatvaladdr)
+// 			Tatvalidator := k.mustGetValidator(ctx, Tatvaladdr)
+// 			k.AddNewIterator(ctx, Tatvalidator)
+// 		}
+// 	}
+// }

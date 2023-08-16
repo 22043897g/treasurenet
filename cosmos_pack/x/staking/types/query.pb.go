@@ -6,6 +6,10 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
@@ -14,9 +18,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1537,6 +1538,8 @@ type QueryClient interface {
 	UnbondingDelegation(ctx context.Context, in *QueryUnbondingDelegationRequest, opts ...grpc.CallOption) (*QueryUnbondingDelegationResponse, error)
 	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(ctx context.Context, in *QueryDelegatorDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorDelegationsResponse, error)
+	// DelegatorTotalDelegations queries all delegations of a given delegator address.
+	DelegatorTotalDelegations(ctx context.Context, in *QueryDelegatorDelegationsRequest, opts ...grpc.CallOption) (*QueryPoolResponse, error)
 	// DelegatorUnbondingDelegations queries all unbonding delegations of a given
 	// delegator address.
 	DelegatorUnbondingDelegations(ctx context.Context, in *QueryDelegatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorUnbondingDelegationsResponse, error)
@@ -1627,6 +1630,15 @@ func (c *queryClient) DelegatorDelegations(ctx context.Context, in *QueryDelegat
 	return out, nil
 }
 
+func (c *queryClient) DelegatorTotalDelegations(ctx context.Context, in *QueryDelegatorDelegationsRequest, opts ...grpc.CallOption) (*QueryPoolResponse, error) {
+	out := new(QueryPoolResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/DelegatorTotalDelegations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) DelegatorUnbondingDelegations(ctx context.Context, in *QueryDelegatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorUnbondingDelegationsResponse, error) {
 	out := new(QueryDelegatorUnbondingDelegationsResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations", in, out, opts...)
@@ -1707,6 +1719,8 @@ type QueryServer interface {
 	UnbondingDelegation(context.Context, *QueryUnbondingDelegationRequest) (*QueryUnbondingDelegationResponse, error)
 	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(context.Context, *QueryDelegatorDelegationsRequest) (*QueryDelegatorDelegationsResponse, error)
+	// DelegatorTotalDelegations queries all delegations of a given delegator address.
+	DelegatorTotalDelegations(context.Context, *QueryDelegatorDelegationsRequest) (*QueryPoolResponse, error)
 	// DelegatorUnbondingDelegations queries all unbonding delegations of a given
 	// delegator address.
 	DelegatorUnbondingDelegations(context.Context, *QueryDelegatorUnbondingDelegationsRequest) (*QueryDelegatorUnbondingDelegationsResponse, error)
@@ -1750,6 +1764,9 @@ func (*UnimplementedQueryServer) UnbondingDelegation(ctx context.Context, req *Q
 }
 func (*UnimplementedQueryServer) DelegatorDelegations(ctx context.Context, req *QueryDelegatorDelegationsRequest) (*QueryDelegatorDelegationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegatorDelegations not implemented")
+}
+func (*UnimplementedQueryServer) DelegatorTotalDelegations(ctx context.Context, req *QueryDelegatorDelegationsRequest) (*QueryPoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelegatorTotalDelegations not implemented")
 }
 func (*UnimplementedQueryServer) DelegatorUnbondingDelegations(ctx context.Context, req *QueryDelegatorUnbondingDelegationsRequest) (*QueryDelegatorUnbondingDelegationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegatorUnbondingDelegations not implemented")
@@ -1899,6 +1916,24 @@ func _Query_DelegatorDelegations_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).DelegatorDelegations(ctx, req.(*QueryDelegatorDelegationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DelegatorTotalDelegations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDelegatorDelegationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DelegatorTotalDelegations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/DelegatorTotalDelegations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DelegatorTotalDelegations(ctx, req.(*QueryDelegatorDelegationsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2060,6 +2095,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DelegatorDelegations",
 			Handler:    _Query_DelegatorDelegations_Handler,
+		},
+		{
+			MethodName: "DelegatorTotalDelegations",
+			Handler:    _Query_DelegatorTotalDelegations_Handler,
 		},
 		{
 			MethodName: "DelegatorUnbondingDelegations",

@@ -366,3 +366,12 @@ func (msg MsgUndelegate) ValidateBasic() error {
 
 	return nil
 }
+
+// NewMsgUndelegate creates a new MsgUndelegate instance.
+//nolint:interfacer
+// func NewMsgGetPubkey(pubkey string, accountaddress string) *MsgGetPubkey {
+// 	return &MsgGetPubkey{
+// 		Pubkey:         pubkey,
+// 		AccountAddress: accountaddress,
+// 	}
+// }

@@ -25,8 +25,8 @@ func (k Keeper) initializeValidator(ctx sdk.Context, val stakingtypes.ValidatorI
 }
 
 // increment validator period, returning the period just ended 增加验证器周期，返回刚刚结束的周期
-//时期递增时当前时期收益信息会被转存到历史时期收益信息当中
-//这个方法首先根据累计的收益和当前抵押中的链上资产总量计算当前时期单位链上资产的累计收益  current = rewards/token
+// 时期递增时当前时期收益信息会被转存到历史时期收益信息当中
+// 这个方法首先根据累计的收益和当前抵押中的链上资产总量计算当前时期单位链上资产的累计收益  current = rewards/token
 func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.ValidatorI) uint64 {
 	// fetch current rewards
 	rewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
@@ -48,6 +48,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.Valid
 	} else {
 		// note: necessary to truncate so we don't allow withdrawing more rewards than owed 注意：截取操作是有必要的，防止取回的收益高于实际拥有的
 		current = rewards.Rewards.QuoDecTruncate(val.GetTokens().ToDec())
+		// current = rewards.Rewards.QuoDecTruncate(val.GetDelegatorShares())
 	}
 
 	// fetch historical rewards for last period
@@ -55,7 +56,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.Valid
 
 	// decrement reference count
 	k.decrementReferenceCount(ctx, val.GetOperator(), rewards.Period-1)
- 
+
 	// set new historical rewards with reference count of 1 设置新的历史奖励，引用计数为 1
 	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(historical.Add(current...), 1))
 

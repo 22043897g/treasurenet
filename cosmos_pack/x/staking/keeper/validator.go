@@ -15,15 +15,13 @@ import (
 // get a single validator
 func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	//fmt.Println("GetValidator addr:", addr)
-	//fmt.Println("types.GetValidatorKey(addr)", types.GetValidatorKey(addr))
+	// fmt.Println("types.GetValidatorKey(addr)", types.GetValidatorKey(addr))
 	value := store.Get(types.GetValidatorKey(addr))
 	if value == nil {
 		return validator, false
 	}
 
 	validator = types.MustUnmarshalValidator(k.cdc, value)
-	//fmt.Printf("GetValidator:%+v\n", validator)
 	// TatTokens, _ := k.GetTatTokens(ctx, addr)
 	// NewTokens, _ := k.GetNewTokens(ctx, addr)
 	TatTokens, _ := k.GetTatTokens2(ctx, addr)
@@ -38,115 +36,111 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	validator.TatPower = sdk.NewInt(TatPower)
 	return validator, true
 }
-func (k Keeper) GetTatTokens(ctx sdk.Context, addr sdk.ValAddress) (TatTokens int64, found bool) {
+func (k Keeper) GetTatTokens(ctx sdk.Context, addr sdk.ValAddress) (tattokens int64, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	//fmt.Println("GetValidator addr:", addr)
-	//fmt.Println("types.GetValidatorKey(addr)", types.GetValidatorKey(addr))
+	// fmt.Println("GetValidator addr:", addr)
+	// fmt.Println("types.GetValidatorKey(addr)", types.GetValidatorKey(addr))
 	value := store.Get(types.GetTatTokensKey(addr))
 	if value == nil {
-		return TatTokens, false
+		return tattokens, false
 	}
 	newtat, _ := strconv.ParseInt(string(value), 10, 64)
-	//strtat, _ := sdk.NewIntFromString(string(value))
-	TatTokens = newtat
-	return TatTokens, true
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	tattokens = newtat
+	return tattokens, true
 }
-func (k Keeper) GetTatTokens2(ctx sdk.Context, addr sdk.ValAddress) (TatTokens sdk.Int, found bool) {
+func (k Keeper) GetTatTokens2(ctx sdk.Context, addr sdk.ValAddress) (tattokens sdk.Int, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	value := store.Get(types.GetTatTokensKey(addr))
 	if value == nil {
 		return sdk.ZeroInt(), false
-		//return TatTokens, false
+		// return TatTokens, false
 	}
-	//newtat, _ := sdk.NewIntFromString(string(value))
-	err := TatTokens.UnmarshalJSON(value)
+	// newtat, _ := sdk.NewIntFromString(string(value))
+	err := tattokens.UnmarshalJSON(value)
 	if err != nil {
 		return sdk.ZeroInt(), false
-	} else {
-		fmt.Println("newtat:", TatTokens)
-		return TatTokens, true
 	}
-	//strtat, _ := sdk.NewIntFromString(string(value))
-	//TatTokens = newtat
-	//return TatTokens, true
+	// fmt.Println("newtat:", TatTokens)
+	return tattokens, true
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	// TatTokens = newtat
+	// return TatTokens, true
 }
-func (k Keeper) GetNewTokens(ctx sdk.Context, addr sdk.ValAddress) (NewTokens int64, found bool) {
+func (k Keeper) GetNewTokens(ctx sdk.Context, addr sdk.ValAddress) (newtokens int64, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	//fmt.Println("GetValidator addr:", addr)
-	//fmt.Println("types.GetValidatorKey(addr)", types.GetValidatorKey(addr))
+	// fmt.Println("GetValidator addr:", addr)
+	// fmt.Println("types.GetValidatorKey(addr)", types.GetValidatorKey(addr))
 	value := store.Get(types.GetNewTokensKey(addr))
 	if value == nil {
-		return NewTokens, false
+		return newtokens, false
 	}
 	newtat, _ := strconv.ParseInt(string(value), 10, 64)
-	//strtat, _ := sdk.NewIntFromString(string(value))
-	NewTokens = newtat
-	return NewTokens, true
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	newtokens = newtat
+	return newtokens, true
 }
-func (k Keeper) GetNewTokens2(ctx sdk.Context, addr sdk.ValAddress) (NewTokens sdk.Int, found bool) {
+func (k Keeper) GetNewTokens2(ctx sdk.Context, addr sdk.ValAddress) (newtokens sdk.Int, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	value := store.Get(types.GetNewTokensKey(addr))
 	if value == nil {
 		return sdk.ZeroInt(), false
-		//return NewTokens, false
+		// return NewTokens, false
 	}
-	//newtat, _ := sdk.NewIntFromString(string(value))
-	//strtat, _ := sdk.NewIntFromString(string(value))
-	err := NewTokens.UnmarshalJSON(value)
+	// newtat, _ := sdk.NewIntFromString(string(value))
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	err := newtokens.UnmarshalJSON(value)
 	if err != nil {
 		return sdk.ZeroInt(), false
-	} else {
-		fmt.Println("newunit:", NewTokens)
-		return NewTokens, true
 	}
+	// fmt.Println("newunit:", NewTokens)
+	return newtokens, true
 	// NewTokens = newtat
 	// return NewTokens, true
 }
-func (k Keeper) GetTatPower(ctx sdk.Context, addr sdk.ValAddress) (TatPower int64, found bool) {
+func (k Keeper) GetTatPower(ctx sdk.Context, addr sdk.ValAddress) (tatpower int64, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	//fmt.Println("GetValidator addr:", addr)
-	//fmt.Println("types.GetValidatorKey(addr)", types.GetValidatorKey(addr))
+	// fmt.Println("GetValidator addr:", addr)
+	// fmt.Println("types.GetValidatorKey(addr)", types.GetValidatorKey(addr))
 	value := store.Get(types.GetTatPowerKey(addr))
 	if value == nil {
-		return TatPower, false
+		return tatpower, false
 	}
-	tatpower, _ := strconv.ParseInt(string(value), 10, 64)
-	//strtat, _ := sdk.NewIntFromString(string(value))
-	TatPower = tatpower
-	return TatPower, true
+	tatpower1, _ := strconv.ParseInt(string(value), 10, 64)
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	tatpower = tatpower1
+	return tatpower, true
 }
-func (k Keeper) GetTatPower2(ctx sdk.Context, addr sdk.ValAddress) (TatPower sdk.Int, found bool) {
+func (k Keeper) GetTatPower2(ctx sdk.Context, addr sdk.ValAddress) (tatpower sdk.Int, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	value := store.Get(types.GetTatPowerKey(addr))
 	if value == nil {
 		return sdk.ZeroInt(), false
-		//return TatPower, false
+		// return TatPower, false
 	}
 	// tatpower, _ := sdk.NewIntFromString(string(value))
 	// TatPower = tatpower
 	// return TatPower, true
-	err := TatPower.UnmarshalJSON(value)
+	err := tatpower.UnmarshalJSON(value)
 	if err != nil {
 		return sdk.ZeroInt(), false
-	} else {
-		fmt.Println("TatPower:", TatPower)
-		return TatPower, true
 	}
+	return tatpower, true
 }
-func (k Keeper) GetNewUnitPower(ctx sdk.Context, addr sdk.ValAddress) (NewUnitPower sdk.Int, found bool) {
+func (k Keeper) GetNewUnitPower(ctx sdk.Context, addr sdk.ValAddress) (newunitpower sdk.Int, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	value := store.Get(types.GetNewUnitPowerKey(addr))
 	if value == nil {
 		return sdk.ZeroInt(), false
-		//return NewUnitPower, false
+		// return NewUnitPower, false
 	}
 	// newunitpower, _ := sdk.NewIntFromString(string(value))
 	// NewUnitPower = newunitpower
 	// return NewUnitPower, true
-	newunitpower, _ := strconv.ParseInt(string(value), 10, 64)
-	//strtat, _ := sdk.NewIntFromString(string(value))
-	NewUnitPower = sdk.NewInt(newunitpower)
-	return NewUnitPower, true
+	newunitpower1, _ := strconv.ParseInt(string(value), 10, 64)
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	newunitpower = sdk.NewInt(newunitpower1)
+	return newunitpower, true
 }
 func (k Keeper) mustGetValidator(ctx sdk.Context, addr sdk.ValAddress) types.Validator {
 	validator, found := k.GetValidator(ctx, addr)
@@ -164,7 +158,7 @@ func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress
 	if opAddr == nil {
 		return validator, false
 	}
-	//fmt.Println("GetValidatorByConsAddr opAddr:", opAddr)
+	// fmt.Println("GetValidatorByConsAddr opAddr:", opAddr)
 	return k.GetValidator(ctx, opAddr)
 }
 
@@ -179,29 +173,29 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAdd
 
 // set the main record holding validator details
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
-	//v := &validator
+	// v := &validator
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalValidator(k.cdc, &validator)
 	store.Set(types.GetValidatorKey(validator.GetOperator()), bz)
 }
 
-//tattoken
+// tattoken
 func (k Keeper) SetTat(ctx sdk.Context, tatToken int64, addr sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
-	//tat := sdk.NewInt(tatToken)
-	//bz, _ := tat.MarshalJSON()
+	// tat := sdk.NewInt(tatToken)
+	// bz, _ := tat.MarshalJSON()
 	bz, _ := json.Marshal(tatToken)
-	//bz, _ := json.Marshal(&validator)
-	//unbz := types.MustUnmarshalValidator(k.cdc, bz)
-	//fmt.Printf("unbz:%+v\n", unbz)
-	//UnmarshalValidator
-	//fmt.Printf("bz:%+v\n", bz)
-	//fmt.Printf("validator.GetOperator():%+v\n", validator.GetOperator())
-	//fmt.Printf("types.GetValidatorKey(validator.GetOperator()):%+v\n", types.GetValidatorKey(validator.GetOperator()))
+	// bz, _ := json.Marshal(&validator)
+	// unbz := types.MustUnmarshalValidator(k.cdc, bz)
+	// fmt.Printf("unbz:%+v\n", unbz)
+	// UnmarshalValidator
+	// fmt.Printf("bz:%+v\n", bz)
+	// fmt.Printf("validator.GetOperator():%+v\n", validator.GetOperator())
+	// fmt.Printf("types.GetValidatorKey(validator.GetOperator()):%+v\n", types.GetValidatorKey(validator.GetOperator()))
 	store.Set(types.GetTatTokensKey(addr), bz)
 }
 
-//tattoken
+// tattoken
 func (k Keeper) SetTat2(ctx sdk.Context, tatToken []byte, addr sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.GetTatTokensKey(addr), tatToken)
@@ -221,7 +215,7 @@ func (k Keeper) SetNewUnitPower(ctx sdk.Context, newunitPower int64, addr sdk.Va
 	store.Set(types.GetNewUnitPowerKey(addr), bz)
 }
 
-//tatpower
+// tatpower
 func (k Keeper) SetTatPower(ctx sdk.Context, tatPower int64, addr sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
 	bz, _ := json.Marshal(tatPower)
@@ -253,7 +247,7 @@ func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Valida
 	store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
 }
 
-//new validator index
+// new validator index
 func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
 	// jailed validators are not kept in the power index
 	if validator.Jailed {
@@ -273,6 +267,12 @@ func (k Keeper) DeleteValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 func (k Keeper) DeleteValidatorByTatPowerIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetValidatorsByNewPowerIndexKey(validator, k.PowerReduction(ctx)))
+}
+
+// validator index tat
+func (k Keeper) DeleteValidatorByTatPowerIndex2(ctx sdk.Context, validator types.Validator) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetValidatorsByNewPowerTatIndexKey(validator, k.PowerReduction(ctx)))
 }
 
 // validator index
@@ -309,7 +309,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 // Update the tokens of an existing validator, update the validators tat power index key
 func (k Keeper) AddValidatorTatTokensAndShares(ctx sdk.Context, validator types.Validator,
 	tokensToAdd sdk.Int) (valOut types.Validator, addedShares sdk.Dec) {
-	k.DeleteValidatorByTatPowerIndex(ctx, validator)
+
 	validator, addedShares = validator.AddTatTokensFromDel(tokensToAdd)
 	k.SetValidator(ctx, validator)
 	k.SetNewValidatorByPowerIndex(ctx, validator)
@@ -321,10 +321,11 @@ func (k Keeper) AddValidatorTatTokensAndShares(ctx sdk.Context, validator types.
 func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
 	sharesToRemove sdk.Dec) (valOut types.Validator, removedTokens sdk.Int) {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
+	k.DeleteValidatorByTatPowerIndex(ctx, validator)
 	validator, removedTokens = validator.RemoveDelShares(sharesToRemove)
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator)
-
+	k.SetNewValidatorByPowerIndex(ctx, validator)
 	return validator, removedTokens
 }
 
@@ -332,10 +333,11 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.
 func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
 	validator types.Validator, tokensToRemove sdk.Int) types.Validator {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
+	k.DeleteValidatorByTatPowerIndex(ctx, validator)
 	validator = validator.RemoveTokens(tokensToRemove)
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator)
-
+	k.SetNewValidatorByPowerIndex(ctx, validator)
 	return validator
 }
 
@@ -452,7 +454,7 @@ func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) sdk.Iterator {
 	return sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 }
 
-//returns an iterator for the current validator newpower store
+// returns an iterator for the current validator newpower store
 func (k Keeper) ValidatorsNewPowerStoreIterator(ctx sdk.Context) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByNewPowerIndexKey)

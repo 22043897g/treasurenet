@@ -92,6 +92,7 @@ func (pkl PrivKeyLedgerSecp256k1) PubKey() types.PubKey {
 
 // Sign returns a secp256k1 signature for the corresponding message
 func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
+	fmt.Println("找路径5")
 	device, err := getDevice()
 	if err != nil {
 		return nil, err
@@ -213,6 +214,7 @@ func validateKey(device SECP256K1, pkl PrivKeyLedgerSecp256k1) error {
 // an error, so this should only trigger if the private key is held in memory
 // for a while before use.
 func sign(device SECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte) ([]byte, error) {
+	fmt.Println("找路径6")
 	err := validateKey(device, pkl)
 	if err != nil {
 		return nil, err

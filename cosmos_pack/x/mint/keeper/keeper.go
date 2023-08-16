@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -62,6 +64,113 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 	return
 }
 
+// get the tat
+func (k Keeper) GetMinterTat(ctx sdk.Context) (newtokens sdk.Int, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	value := store.Get(types.TatAllTokensKey)
+	if value == nil {
+		return sdk.ZeroInt(), false
+		// return NewTokens, false
+	}
+	// newtat, _ := sdk.NewIntFromString(string(value))
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	err := newtokens.UnmarshalJSON(value)
+	if err != nil {
+		return sdk.ZeroInt(), false
+	}
+	// fmt.Println("newunit:", NewTokens)
+	return newtokens, true
+}
+
+func (k Keeper) GetMinterTatNew(ctx sdk.Context, year []byte) (newtokens sdk.Int, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	value := store.Get(types.GetTatAllTokensKey(year))
+	if value == nil {
+		return sdk.ZeroInt(), false
+		// return NewTokens, false
+	}
+	// newtat, _ := sdk.NewIntFromString(string(value))
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	err := newtokens.UnmarshalJSON(value)
+	if err != nil {
+		return sdk.ZeroInt(), false
+	}
+	// fmt.Println("newunit:", NewTokens)
+	return newtokens, true
+}
+
+// get the tatend
+func (k Keeper) GettMinterTatEnd(ctx sdk.Context) (newtokens sdk.Int, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	value := store.Get(types.TatAllTokensEndKey)
+	if value == nil {
+		return sdk.ZeroInt(), false
+		// return NewTokens, false
+	}
+	// newtat, _ := sdk.NewIntFromString(string(value))
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	err := newtokens.UnmarshalJSON(value)
+	if err != nil {
+		return sdk.ZeroInt(), false
+	}
+	// fmt.Println("newunit:", NewTokens)
+	return newtokens, true
+}
+
+// get the tatendAll
+func (k Keeper) GettMinterTatAll(ctx sdk.Context) (newtokens sdk.Int, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	value := store.Get(types.TatAllTokensAllKey)
+	if value == nil {
+		return sdk.ZeroInt(), false
+		// return NewTokens, false
+	}
+	// newtat, _ := sdk.NewIntFromString(string(value))
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	err := newtokens.UnmarshalJSON(value)
+	if err != nil {
+		return sdk.ZeroInt(), false
+	}
+	// fmt.Println("newunit:", NewTokens)
+	return newtokens, true
+}
+
+// get the tatendAll
+func (k Keeper) GettMinterTatNum(ctx sdk.Context) (newtokens sdk.Int, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	value := store.Get(types.TatNumberKey)
+	if value == nil {
+		return sdk.ZeroInt(), false
+		// return NewTokens, false
+	}
+	// newtat, _ := sdk.NewIntFromString(string(value))
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	err := newtokens.UnmarshalJSON(value)
+	if err != nil {
+		return sdk.ZeroInt(), false
+	}
+	// fmt.Println("newunit:", NewTokens)
+	return newtokens, true
+}
+
+// get the tatyear
+func (k Keeper) GettMinterYear(ctx sdk.Context) (year sdk.Int, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	value := store.Get(types.TatAllTokensYear)
+	if value == nil {
+		return sdk.OneInt(), false
+		// return NewTokens, false
+	}
+	// newtat, _ := sdk.NewIntFromString(string(value))
+	// strtat, _ := sdk.NewIntFromString(string(value))
+	err := year.UnmarshalJSON(value)
+	if err != nil {
+		return sdk.OneInt(), false
+	}
+	// fmt.Println("newunit:", NewTokens)
+	return year, true
+}
+
 // set the minter(minter实现了ProtoMarshaler interface里的所有方法，所以MustMarshal(o ProtoMarshaler) 用到了多态性 ProtoMarshaler=&minter)
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	// fmt.Printf("keeper_minter:%+v", minter)
@@ -71,6 +180,42 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	b := k.cdc.MustMarshal(&minter)
 	// fmt.Printf("b:%+v\n", string(b))
 	store.Set(types.MinterKey, b)
+}
+
+func (k Keeper) SetMinterTat(ctx sdk.Context, year, tatTokens []byte) {
+	// fmt.Printf("keeper_minter:%+v", minter)
+	// fmt.Printf("k.storeKey:%+v\n", k.storeKey)
+	store := ctx.KVStore(k.storeKey)
+	fmt.Printf("types.GetTatAllTokensKey(year):%+v\n", types.GetTatAllTokensKey(year))
+	store.Set(types.GetTatAllTokensKey(year), tatTokens)
+}
+
+func (k Keeper) SetMinterTatEnd(ctx sdk.Context, tatTokens []byte) {
+	// fmt.Printf("keeper_minter:%+v", minter)
+	// fmt.Printf("k.storeKey:%+v\n", k.storeKey)
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.TatAllTokensEndKey, tatTokens)
+}
+
+func (k Keeper) SetMinterTatAll(ctx sdk.Context, tatTokens []byte) {
+	// fmt.Printf("keeper_minter:%+v", minter)
+	// fmt.Printf("k.storeKey:%+v\n", k.storeKey)
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.TatAllTokensAllKey, tatTokens)
+}
+
+func (k Keeper) SetMinterTatNum(ctx sdk.Context, tatTokens []byte) {
+	// fmt.Printf("keeper_minter:%+v", minter)
+	// fmt.Printf("k.storeKey:%+v\n", k.storeKey)
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.TatNumberKey, tatTokens)
+}
+
+func (k Keeper) SetMinterYear(ctx sdk.Context, year []byte) {
+	// fmt.Printf("keeper_minter:%+v", minter)
+	// fmt.Printf("k.storeKey:%+v\n", k.storeKey)
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.TatAllTokensYear, year)
 }
 
 // GetParams returns the total set of minting parameters.

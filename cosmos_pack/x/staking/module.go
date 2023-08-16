@@ -174,8 +174,8 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return EndBlocker(ctx, am.keeper)
 }
 
-func (am AppModule) NewEndBlock(ctx sdk.Context, _ abci.RequestEndBlock, log sdk.ABCIMessageLogs) []abci.ValidatorUpdate {
-	return NewEndBlocker(ctx, am.keeper, log)
+func (am AppModule) NewEndBlock(ctx sdk.Context, req abci.RequestEndBlock, log sdk.ABCIMessageLogs) []abci.ValidatorUpdate {
+	return NewEndBlocker(ctx, am.keeper, req, log)
 }
 
 // AppModuleSimulation functions

@@ -4,14 +4,15 @@ import (
 	"errors"
 	"fmt"
 
-	ethcmn "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-	treasurenet "github.com/treasurenet/types"
+	// ethermint "github.com/treasurenetprotocol/treasurenet/types"
+	ethermint "github.com/treasurenetprotocol/treasurenet/types"
 )
 
 // NewTransactionLogs creates a new NewTransactionLogs instance.
-func NewTransactionLogs(hash ethcmn.Hash, logs []*Log) TransactionLogs { // nolint: interfacer
+func NewTransactionLogs(hash common.Hash, logs []*Log) TransactionLogs {
 	return TransactionLogs{
 		Hash: hash.String(),
 		Logs: logs,
@@ -19,7 +20,7 @@ func NewTransactionLogs(hash ethcmn.Hash, logs []*Log) TransactionLogs { // noli
 }
 
 // NewTransactionLogsFromEth creates a new NewTransactionLogs instance using []*ethtypes.Log.
-func NewTransactionLogsFromEth(hash ethcmn.Hash, ethlogs []*ethtypes.Log) TransactionLogs { // nolint: interfacer
+func NewTransactionLogsFromEth(hash common.Hash, ethlogs []*ethtypes.Log) TransactionLogs {
 	return TransactionLogs{
 		Hash: hash.String(),
 		Logs: NewLogsFromEth(ethlogs),
@@ -28,7 +29,7 @@ func NewTransactionLogsFromEth(hash ethcmn.Hash, ethlogs []*ethtypes.Log) Transa
 
 // Validate performs a basic validation of a GenesisAccount fields.
 func (tx TransactionLogs) Validate() error {
-	if treasurenet.IsEmptyHash(tx.Hash) {
+	if ethermint.IsEmptyHash(tx.Hash) {
 		return fmt.Errorf("hash cannot be the empty %s", tx.Hash)
 	}
 
@@ -53,43 +54,43 @@ func (tx TransactionLogs) EthLogs() []*ethtypes.Log {
 
 // Validate performs a basic validation of an ethereum Log fields.
 func (log *Log) Validate() error {
-	if err := treasurenet.ValidateAddress(log.Address); err != nil {
+	if err := ethermint.ValidateAddress(log.Address); err != nil {
 		return fmt.Errorf("invalid log address %w", err)
 	}
-	if treasurenet.IsEmptyHash(log.BlockHash) {
+	if ethermint.IsEmptyHash(log.BlockHash) {
 		return fmt.Errorf("block hash cannot be the empty %s", log.BlockHash)
 	}
 	if log.BlockNumber == 0 {
 		return errors.New("block number cannot be zero")
 	}
-	if treasurenet.IsEmptyHash(log.TxHash) {
+	if ethermint.IsEmptyHash(log.TxHash) {
 		return fmt.Errorf("tx hash cannot be the empty %s", log.TxHash)
 	}
 	return nil
 }
 
-// ToEthereum returns the Ethereum type Log from a Treasurenet proto compatible Log.
+// ToEthereum returns the Ethereum type Log from a Ethermint proto compatible Log.
 func (log *Log) ToEthereum() *ethtypes.Log {
-	var topics []ethcmn.Hash // nolint: prealloc
-	for i := range log.Topics {
-		topics = append(topics, ethcmn.HexToHash(log.Topics[i]))
+	topics := make([]common.Hash, len(log.Topics))
+	for i, topic := range log.Topics {
+		topics[i] = common.HexToHash(topic)
 	}
 
 	return &ethtypes.Log{
-		Address:     ethcmn.HexToAddress(log.Address),
+		Address:     common.HexToAddress(log.Address),
 		Topics:      topics,
 		Data:        log.Data,
 		BlockNumber: log.BlockNumber,
-		TxHash:      ethcmn.HexToHash(log.TxHash),
+		TxHash:      common.HexToHash(log.TxHash),
 		TxIndex:     uint(log.TxIndex),
 		Index:       uint(log.Index),
-		BlockHash:   ethcmn.HexToHash(log.BlockHash),
+		BlockHash:   common.HexToHash(log.BlockHash),
 		Removed:     log.Removed,
 	}
 }
 
 func NewLogsFromEth(ethlogs []*ethtypes.Log) []*Log {
-	var logs []*Log // nolint: prealloc
+	var logs []*Log //nolint: prealloc
 	for _, ethlog := range ethlogs {
 		logs = append(logs, NewLogFromEth(ethlog))
 	}
@@ -97,9 +98,9 @@ func NewLogsFromEth(ethlogs []*ethtypes.Log) []*Log {
 	return logs
 }
 
-// LogsToEthereum casts the Treasurenet Logs to a slice of Ethereum Logs.
+// LogsToEthereum casts the Ethermint Logs to a slice of Ethereum Logs.
 func LogsToEthereum(logs []*Log) []*ethtypes.Log {
-	var ethLogs []*ethtypes.Log // nolint: prealloc
+	var ethLogs []*ethtypes.Log //nolint: prealloc
 	for i := range logs {
 		ethLogs = append(ethLogs, logs[i].ToEthereum())
 	}
@@ -108,9 +109,9 @@ func LogsToEthereum(logs []*Log) []*ethtypes.Log {
 
 // NewLogFromEth creates a new Log instance from a Ethereum type Log.
 func NewLogFromEth(log *ethtypes.Log) *Log {
-	var topics []string // nolint: prealloc
-	for _, topic := range log.Topics {
-		topics = append(topics, topic.String())
+	topics := make([]string, len(log.Topics))
+	for i, topic := range log.Topics {
+		topics[i] = topic.String()
 	}
 
 	return &Log{

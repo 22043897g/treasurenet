@@ -25,7 +25,7 @@ var (
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
-	defaultMinSelfDelegation       = "1"
+	defaultMinSelfDelegation       = sdk.NewIntWithDecimal(int64(158), 18).String()
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
@@ -176,6 +176,7 @@ $ %s tx staking delegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --f
 			}
 
 			msg := types.NewMsgDelegate(delAddr, valAddr, amount)
+			fmt.Println("msg", &msg)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

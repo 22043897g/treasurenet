@@ -69,7 +69,7 @@ func TestRandomizedGenState1(t *testing.T) {
 		panicMsg string
 	}{
 		{ // panic => reason: incomplete initialization of the simState
-			module.SimulationState{}, "invalid memory address or nil pointer dereference"},
+			module.SimulationState{}, "invalid memory address or nil pointer dereference5"},
 		{ // panic => reason: incomplete initialization of the simState
 			module.SimulationState{
 				AppParams: make(simtypes.AppParams),

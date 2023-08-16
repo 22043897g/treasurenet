@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	"fmt"
+
 	bytes "github.com/tendermint/tendermint/libs/bytes"
 	client "github.com/tendermint/tendermint/rpc/client"
 

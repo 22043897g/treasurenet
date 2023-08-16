@@ -76,10 +76,10 @@ func (a ABCIApp) BroadcastTxAsync(ctx context.Context, tx types.Tx) (*ctypes.Res
 }
 
 func (a ABCIApp) BroadcastTxSync(ctx context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
-	c := a.App.CheckTx(abci.RequestCheckTx{Tx: tx})
+	c := a.App.CheckTx(abci.RequestCheckTx{Tx: tx}) //Validate a tx for the mempool
 	// and this gets written in a background thread...
 	if !c.IsErr() {
-		go func() { a.App.DeliverTx(abci.RequestDeliverTx{Tx: tx}) }()
+		go func() { a.App.DeliverTx(abci.RequestDeliverTx{Tx: tx}) }() //发送一个tx以进行完全处理
 	}
 	return &ctypes.ResultBroadcastTx{
 		Code:      c.Code,

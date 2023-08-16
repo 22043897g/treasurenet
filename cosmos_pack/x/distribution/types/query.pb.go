@@ -1047,6 +1047,8 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// ValidatorOutstandingRewards queries rewards of a validator address.
 	ValidatorOutstandingRewards(ctx context.Context, in *QueryValidatorOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorOutstandingRewardsResponse, error)
+	// ValidatorAllOutstandingRewards queries rewards of a validator address.
+	ValidatorAllOutstandingRewards(ctx context.Context, in *QueryValidatorOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorOutstandingRewardsResponse, error)
 	// ValidatorCommission queries accumulated commission for a validator.
 	ValidatorCommission(ctx context.Context, in *QueryValidatorCommissionRequest, opts ...grpc.CallOption) (*QueryValidatorCommissionResponse, error)
 	// ValidatorTatreward queries accumulated tatreward for a validator.
@@ -1086,6 +1088,15 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 func (c *queryClient) ValidatorOutstandingRewards(ctx context.Context, in *QueryValidatorOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorOutstandingRewardsResponse, error) {
 	out := new(QueryValidatorOutstandingRewardsResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ValidatorAllOutstandingRewards(ctx context.Context, in *QueryValidatorOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorOutstandingRewardsResponse, error) {
+	out := new(QueryValidatorOutstandingRewardsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/ValidatorAllOutstandingRewards", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1170,6 +1181,8 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// ValidatorOutstandingRewards queries rewards of a validator address.
 	ValidatorOutstandingRewards(context.Context, *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error)
+	// ValidatorAllOutstandingRewards queries rewards of a validator address.
+	ValidatorAllOutstandingRewards(context.Context, *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error)
 	// ValidatorCommission queries accumulated commission for a validator.
 	ValidatorCommission(context.Context, *QueryValidatorCommissionRequest) (*QueryValidatorCommissionResponse, error)
 	// ValidatorTatreward queries accumulated tatreward for a validator.
@@ -1198,6 +1211,9 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 }
 func (*UnimplementedQueryServer) ValidatorOutstandingRewards(ctx context.Context, req *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatorOutstandingRewards not implemented")
+}
+func (*UnimplementedQueryServer) ValidatorAllOutstandingRewards(ctx context.Context, req *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidatorAllOutstandingRewards not implemented")
 }
 func (*UnimplementedQueryServer) ValidatorCommission(ctx context.Context, req *QueryValidatorCommissionRequest) (*QueryValidatorCommissionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatorCommission not implemented")
@@ -1260,6 +1276,24 @@ func _Query_ValidatorOutstandingRewards_Handler(srv interface{}, ctx context.Con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).ValidatorOutstandingRewards(ctx, req.(*QueryValidatorOutstandingRewardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ValidatorAllOutstandingRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryValidatorOutstandingRewardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ValidatorAllOutstandingRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Query/ValidatorAllOutstandingRewards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ValidatorAllOutstandingRewards(ctx, req.(*QueryValidatorOutstandingRewardsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1419,6 +1453,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ValidatorOutstandingRewards",
 			Handler:    _Query_ValidatorOutstandingRewards_Handler,
+		},
+		{
+			MethodName: "ValidatorAllOutstandingRewards",
+			Handler:    _Query_ValidatorAllOutstandingRewards_Handler,
 		},
 		{
 			MethodName: "ValidatorCommission",

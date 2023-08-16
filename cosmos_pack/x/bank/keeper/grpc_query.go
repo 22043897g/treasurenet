@@ -21,7 +21,7 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 	}
 
 	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
+		return nil, status.Error(codes.InvalidArgument, "balance address cannot be empty")
 	}
 
 	if req.Denom == "" {
@@ -46,7 +46,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	}
 
 	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
+		return nil, status.Error(codes.InvalidArgument, "AllBalance address cannot be empty")
 	}
 
 	addr, err := sdk.AccAddressFromBech32(req.Address)

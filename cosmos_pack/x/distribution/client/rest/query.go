@@ -51,6 +51,12 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 		outstandingRewardsHandlerFn(clientCtx),
 	).Methods("GET")
 
+	// AllOutstanding rewards of a single validator
+	r.HandleFunc(
+		"/distribution/validators/alloutstanding_rewards",
+		alloutstandingRewardsHandlerFn(clientCtx),
+	).Methods("GET")
+
 	// Get the current distribution parameter values
 	r.HandleFunc(
 		"/distribution/parameters",
@@ -274,6 +280,29 @@ func communityPoolHandler(clientCtx client.Context) http.HandlerFunc {
 
 // HTTP request handler to query the outstanding rewards
 func outstandingRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		validatorAddr, ok := checkValidatorAddressVar(w, r)
+		if !ok {
+			return
+		}
+
+		clientCtx, ok = rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
+		if !ok {
+			return
+		}
+
+		bin := clientCtx.LegacyAmino.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr))
+		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_outstanding_rewards", types.QuerierRoute), bin)
+		if rest.CheckInternalServerError(w, err) {
+			return
+		}
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, res)
+	}
+}
+
+// HTTP request handler to query the alloutstanding rewards
+func alloutstandingRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		validatorAddr, ok := checkValidatorAddressVar(w, r)
 		if !ok {

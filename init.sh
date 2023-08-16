@@ -1,3 +1,4 @@
+#!/bin/bash
 
 KEY="mykey"
 CHAINID="treasurenet_9000-1"
@@ -13,7 +14,7 @@ TRACE="--trace"
 command -v jq > /dev/null 2>&1 || { echo >&2 "jq not installed. More info: https://stedolan.github.io/jq/download/"; exit 1; }
 
 # remove existing daemon and client
-rm -rf ~/.treasurenet*
+rm -rf ~/.treasurenetd*
 
 make install
 
@@ -23,8 +24,8 @@ treasurenetd config chain-id $CHAINID
 # if $KEY exists it should be deleted
 treasurenetd keys add $KEY --keyring-backend $KEYRING --algo $KEYALGO
 
-# Set moniker and chain-id for Treasurenet (Moniker can be anything, chain-id must be an integer)
-treasurenetd init $MONIKER --chain-id $CHAINID 
+# Set moniker and chain-id for treasurenet (Moniker can be anything, chain-id must be an integer)
+treasurenetd init $MONIKER --chain-id $CHAINID
 
 # Change parameter token denominations to aunit
 cat $HOME/.treasurenetd/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="aunit"' > $HOME/.treasurenetd/config/tmp_genesis.json && mv $HOME/.treasurenetd/config/tmp_genesis.json $HOME/.treasurenetd/config/genesis.json
@@ -33,7 +34,7 @@ cat $HOME/.treasurenetd/config/genesis.json | jq '.app_state["gov"]["deposit_par
 cat $HOME/.treasurenetd/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="aunit"' > $HOME/.treasurenetd/config/tmp_genesis.json && mv $HOME/.treasurenetd/config/tmp_genesis.json $HOME/.treasurenetd/config/genesis.json
 
 # increase block time (?)
-cat $HOME/.treasurenetd/config/genesis.json | jq '.consensus_params["block"]["time_iota_ms"]="30000"' > $HOME/.treasurenetd/config/tmp_genesis.json && mv $HOME/.treasurenetd/config/tmp_genesis.json $HOME/.treasurenetd/config/genesis.json
+cat $HOME/.treasurenetd/config/genesis.json | jq '.consensus_params["block"]["time_iota_ms"]="1000"' > $HOME/.treasurenetd/config/tmp_genesis.json && mv $HOME/.treasurenetd/config/tmp_genesis.json $HOME/.treasurenetd/config/genesis.json
 
 # Set gas limit in genesis
 cat $HOME/.treasurenetd/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $HOME/.treasurenetd/config/tmp_genesis.json && mv $HOME/.treasurenetd/config/tmp_genesis.json $HOME/.treasurenetd/config/genesis.json
@@ -70,7 +71,7 @@ if [[ $1 == "pending" ]]; then
 fi
 
 # Allocate genesis accounts (cosmos formatted addresses)
-treasurenetd add-genesis-account $KEY 100000000000000000000000000aunit --keyring-backend $KEYRING
+treasurenetd add-genesis-account $KEY 10000000000000000000000000000000aunit --keyring-backend $KEYRING
 
 # Sign genesis transaction
 treasurenetd gentx $KEY 1000000000000000000000aunit --keyring-backend $KEYRING --chain-id $CHAINID
@@ -85,5 +86,5 @@ if [[ $1 == "pending" ]]; then
   echo "pending mode is on, please wait for the first block committed."
 fi
 
-# Start the node (remove the --pruning=nothing flag if historical queries are not needed) --json-rpc.ws-address localhost:8546
-treasurenetd start --pruning=nothing $TRACE --log_level $LOGLEVEL --minimum-gas-prices=0.0001aunit --json-rpc.api eth,txpool,personal,net,debug,web3,miner
+# Start the node (remove the --pruning=nothing flag if historical queries are not needed)
+treasurenetd start --pruning=nothing --evm.tracer=json $TRACE --log_level $LOGLEVEL --minimum-gas-prices=0.0001aunit --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable

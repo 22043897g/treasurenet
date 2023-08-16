@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -51,28 +52,31 @@ func DecodeTransactionLogs(data []byte) (TransactionLogs, error) {
 }
 
 // UnwrapEthereumMsg extract MsgEthereumTx from wrapping sdk.Tx
-func UnwrapEthereumMsg(tx *sdk.Tx) (*MsgEthereumTx, error) {
+func UnwrapEthereumMsg(tx *sdk.Tx, ethHash common.Hash) (*MsgEthereumTx, error) {
 	if tx == nil {
 		return nil, fmt.Errorf("invalid tx: nil")
 	}
 
-	if len((*tx).GetMsgs()) != 1 {
-		return nil, fmt.Errorf("invalid tx type: %T", tx)
-	}
-	msg, ok := (*tx).GetMsgs()[0].(*MsgEthereumTx)
-	if !ok {
-		return nil, fmt.Errorf("invalid tx type: %T", tx)
+	for _, msg := range (*tx).GetMsgs() {
+		ethMsg, ok := msg.(*MsgEthereumTx)
+		if !ok {
+			return nil, fmt.Errorf("invalid tx type: %T", tx)
+		}
+		txHash := ethMsg.AsTransaction().Hash()
+		ethMsg.Hash = txHash.Hex()
+		if txHash == ethHash {
+			return ethMsg, nil
+		}
 	}
 
-	return msg, nil
+	return nil, fmt.Errorf("eth tx not found: %s", ethHash)
 }
 
 // BinSearch execute the binary search and hone in on an executable gas limit
-func BinSearch(lo uint64, hi uint64, executable func(uint64) (bool, *MsgEthereumTxResponse, error)) (uint64, error) {
+func BinSearch(lo, hi uint64, executable func(uint64) (bool, *MsgEthereumTxResponse, error)) (uint64, error) {
 	for lo+1 < hi {
 		mid := (hi + lo) / 2
 		failed, _, err := executable(mid)
-
 		// If the error is not nil(consensus error), it means the provided message
 		// call or transaction will never be accepted no matter how much gas it is
 		// assigned. Return the error directly, don't struggle any more.

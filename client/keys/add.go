@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sort"
 
-	treasurenethd "github.com/treasurenet/crypto/hd"
+	etherminthd "github.com/treasurenetprotocol/treasurenet/crypto/hd"
 
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
@@ -79,7 +79,7 @@ Example:
 	f.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	f.Uint32(flagAccount, 0, "Account number for HD derivation")
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation")
-	f.String(flags.FlagKeyAlgorithm, string(treasurenethd.EthSecp256k1Type), "Key signing algorithm to generate keys for")
+	f.String(flags.FlagKeyAlgorithm, string(etherminthd.EthSecp256k1Type), "Key signing algorithm to generate keys for")
 
 	return cmd
 }
@@ -95,13 +95,17 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 }
 
 /*
+=======
+/*
+RunAddCmd
 input
-	- bip39 mnemonic
-	- bip39 passphrase
-	- bip44 path
-	- local encryption password
+  - bip39 mnemonic
+  - bip39 passphrase
+  - bip44 path
+  - local encryption password
+
 output
-	- armor encrypted private key (saved to file)
+  - armor encrypted private key (saved to file)
 */
 func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
@@ -122,7 +126,7 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
 		// use in memory keybase
-		kb = keyring.NewInMemory(treasurenethd.EthSecp256k1Option())
+		kb = keyring.NewInMemory(etherminthd.EthSecp256k1Option())
 	} else {
 		_, err = kb.Key(name)
 		if err == nil {
@@ -289,7 +293,7 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	return printCreate(cmd, info, showMnemonic, mnemonic, outputFormat)
 }
 
-func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic string, outputFormat string) error {
+func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic, outputFormat string) error {
 	switch outputFormat {
 	case OutputFormatText:
 		cmd.PrintErrln()

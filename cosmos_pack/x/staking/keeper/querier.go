@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -38,6 +39,9 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryDelegatorDelegations:
 			return queryDelegatorDelegations(ctx, req, k, legacyQuerierCdc)
 
+		case types.QueryDelegatorTotalDelegations:
+			return queryDelegatorTotalDelegations(ctx, req, k, legacyQuerierCdc)
+
 		case types.QueryDelegatorUnbondingDelegations:
 			return queryDelegatorUnbondingDelegations(ctx, req, k, legacyQuerierCdc)
 
@@ -72,7 +76,7 @@ func queryValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
-
+	totaltokens := sdk.ZeroInt()
 	validators := k.GetAllValidators(ctx)
 	filteredVals := make(types.Validators, 0, len(validators))
 
@@ -81,7 +85,19 @@ func queryValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 			filteredVals = append(filteredVals, val)
 		}
 	}
-
+	for _, value := range filteredVals {
+		fmt.Printf("value.Tokens2:%+v", value.Tokens)
+		// totaltokens = value.Tokens.Add(value.Tokens)
+		totaltokens = value.AddTokens(value.Tokens)
+	}
+	// for _, value := range filteredVals {
+	// 	fmt.Printf("totaltokens2:%+v", totaltokens)
+	// 	value.TokensShares = sdk.NewDecFromInt(value.Tokens).QuoTruncate(sdk.NewDecFromInt(totaltokens))
+	// 	value.DelegatorShares = sdk.NewDecFromInt(value.Tokens).QuoTruncate(sdk.NewDecFromInt(totaltokens))
+	// }
+	for i := 0; i < len(filteredVals); i++ {
+		filteredVals[i].TokensShares = sdk.NewDecFromInt(filteredVals[i].Tokens).QuoTruncate(sdk.NewDecFromInt(totaltokens))
+	}
 	start, end := client.Paginate(len(filteredVals), params.Page, params.Limit, int(k.GetParams(ctx).MaxValidators))
 	if start < 0 || end < 0 {
 		filteredVals = []types.Validator{}
@@ -205,6 +221,44 @@ func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper,
 	}
 
 	return res, nil
+}
+
+func queryDelegatorTotalDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	var params types.QueryDelegatorParams
+
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
+	balances := sdk.NewCoin(k.BondDenom(ctx), sdk.ZeroInt())
+	delegations := k.GetAllDelegatorDelegations(ctx, params.DelegatorAddr)
+	delegationResps, err := DelegationsToDelegationResponses(ctx, k, delegations)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if delegationResps == nil {
+		delegationResps = types.DelegationResponses{}
+	}
+
+	for _, value := range delegationResps {
+		// fmt.Printf("value.Balance:%+v", value.Balance)
+		balances = balances.Add(value.Balance)
+	}
+
+	pool := types.NewPool(
+		sdk.ZeroInt(),
+		balances.Amount,
+	)
+
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, pool)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return res, nil
+
 }
 
 func queryDelegatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {

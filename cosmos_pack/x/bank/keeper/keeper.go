@@ -274,7 +274,7 @@ func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metada
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.
 // It will panic if the module account does not exist. An error is returned if
 // the recipient address is black-listed or if sending the tokens fails.
-//SendCoinsFromModuleToAccount 将硬币从 ModuleAccount 转移到 AccAddress。
+// SendCoinsFromModuleToAccount 将硬币从 ModuleAccount 转移到 AccAddress。
 // 如果模块账号不存在，会panic。返回错误，如果
 // 收件人地址被列入黑名单或发送令牌失败
 func (k BaseKeeper) SendCoinsFromModuleToAccount(
@@ -300,6 +300,7 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 ) error {
 
 	senderAddr := k.ak.GetModuleAddress(senderModule)
+	// fmt.Printf("测试ModuleAccount 地址：%+v\n", senderAddr)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
 	}

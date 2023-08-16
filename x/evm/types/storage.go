@@ -2,12 +2,10 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/treasurenet/types"
-
-	ethcmn "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // Storage represents the account Storage map as a slice of single key value
@@ -50,16 +48,17 @@ func (s Storage) Copy() Storage {
 }
 
 // Validate performs a basic validation of the State fields.
+// NOTE: state value can be empty
 func (s State) Validate() error {
-	if types.IsEmptyHash(s.Key) {
-		return sdkerrors.Wrap(ErrInvalidState, "state key hash cannot be empty")
+	if strings.TrimSpace(s.Key) == "" {
+		return sdkerrors.Wrap(ErrInvalidState, "state key hash cannot be blank")
 	}
-	// NOTE: state value can be empty
+
 	return nil
 }
 
 // NewState creates a new State instance
-func NewState(key, value ethcmn.Hash) State { // nolint: interfacer
+func NewState(key, value common.Hash) State {
 	return State{
 		Key:   key.String(),
 		Value: value.String(),
