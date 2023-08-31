@@ -24,9 +24,9 @@ jobs:
     - name: Remove to go root
       run: cd /home/runner/go
     - name: Create bin
-      run: cd mkdir bin
+      run: mkdir bin
     - name: Create src
-      run: cd mkdir src
+      run: mkdir src
     - name: Remove project
       run: mv /home/runner/work/treasurenet/treasurenet /home/runner/go/src/
            
