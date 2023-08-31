@@ -30,12 +30,16 @@ jobs:
     - name: Remove project
       run: cp -r /home/runner/work/treasurenet/treasurenet /home/runner/go/src/
     - name: Go to project root
-      run: cd /home/runner/go/src/treasurenet
-    - name: Enable Go modules
-      run: go env -w GO111MODULE=on
-    - name: Auto Init
-      run: init-gravity.sh
-    - name: Start node
-      run: $BIN start --pruning=nothing --log_level $LOGLEVEL --json-rpc.api eth,txpool,personal,net,debug,web3,miner --trace --json-rpc.address 0.0.0.0:8555
+      run: cd /home/runner/go/src
+    - name: look
+      run: ls
+    # - name: Go to project root
+    #   run: cd /home/runner/go/src/treasurenet
+    # - name: Enable Go modules
+    #   run: go env -w GO111MODULE=on
+    # - name: Auto Init
+    #   run: init-gravity.sh
+    # - name: Start node
+    #   run: $BIN start --pruning=nothing --log_level $LOGLEVEL --json-rpc.api eth,txpool,personal,net,debug,web3,miner --trace --json-rpc.address 0.0.0.0:8555
 
     
