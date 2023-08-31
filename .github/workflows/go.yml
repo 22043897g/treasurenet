@@ -21,8 +21,12 @@ jobs:
       with:
         go-version: '1.20'
 
-    - name: show go root
-      run: go env GOPATH
+    - name: Remove project
+      run: cd /home/runner/go
+           mkdir bin 
+           mkdir src
+           mv /home/runner/work/treasurenet/treasurenet /home/runner/go/src/
+           
 
     # - name: Enable Go modules
     #   run: go env -w GO111MODULE=on
