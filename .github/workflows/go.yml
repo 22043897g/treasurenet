@@ -21,11 +21,14 @@ jobs:
       with:
         go-version: '1.20'
 
-    - name: Remove project
+    - name: Remove to go root
       run: cd /home/runner/go
-           mkdir bin 
-           mkdir src
-           mv /home/runner/work/treasurenet/treasurenet /home/runner/go/src/
+    - name: Create bin
+      run: cd mkdir bin
+    - name: Create src
+      run: cd mkdir src
+    - name: Remove project
+      run: mv /home/runner/work/treasurenet/treasurenet /home/runner/go/src/
            
 
     # - name: Enable Go modules
