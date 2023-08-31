@@ -28,7 +28,7 @@ jobs:
     - name: Create src
       run: mkdir src
     - name: Remove project
-      run: cp -r /home/runner/work/treasurenet/treasurenet /home/runner/go/src/
+      run: cp -r /home/runner/work/treasurenet /home/runner/go/src/
     - name: Go to project root
       run: cd /home/runner/go/src
     - name: look
