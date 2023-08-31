@@ -20,27 +20,19 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.20'
-    # - name: look1
-    #   run: ls
-    # - name: Remove to go root
-    #   run: cd /home/runner/go
-    - name: Create bin
-      run: mkdir bin
-    - name: Create src
-      run: mkdir src
-    # - name: go into src
-    #   run: cd src
+    - name: look1
+      run: ls && cd /home/runner/go && mkdir bin && mkdir src && ls
     # - name: Remove project
     #   run: cp -r /home/runner/work/treasurenet /home/runner/go/src/
     # - name: Go to project root
     #   run: cd /home/runner/go/src
     # - name: Go to project root
     #   run: cd /home/runner/go/src/treasurenet
-    - name: Enable Go modules
-      run: go env -w GO111MODULE=on
-    - name: Auto Init
-      run: ./init.sh
-    - name: Start node
-      run: $BIN start --pruning=nothing --log_level $LOGLEVEL --json-rpc.api eth,txpool,personal,net,debug,web3,miner --trace --json-rpc.address 0.0.0.0:8555
+    # - name: Enable Go modules
+    #   run: go env -w GO111MODULE=on
+    # - name: Auto Init
+    #   run: ./init.sh
+    # - name: Start node
+    #   run: $BIN start --pruning=nothing --log_level $LOGLEVEL --json-rpc.api eth,txpool,personal,net,debug,web3,miner --trace --json-rpc.address 0.0.0.0:8555
 
     
