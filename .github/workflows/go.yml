@@ -1,38 +1,29 @@
 # This workflow will build a golang project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
-name: Go
+name: Go hotfix/1.0.1
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "hotfix/1.0.1" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "hotfix/1.0.1" ]
 
 jobs:
 
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.20'
-    - name: look1
-      run: ls && cd /home/runner/go && mkdir bin && mkdir src && ls
-    # - name: Remove project
-    #   run: cp -r /home/runner/work/treasurenet /home/runner/go/src/
-    # - name: Go to project root
-    #   run: cd /home/runner/go/src
-    # - name: Go to project root
-    #   run: cd /home/runner/go/src/treasurenet
-    # - name: Enable Go modules
-    #   run: go env -w GO111MODULE=on
-    # - name: Auto Init
-    #   run: ./init.sh
-    # - name: Start node
-    #   run: $BIN start --pruning=nothing --log_level $LOGLEVEL --json-rpc.api eth,txpool,personal,net,debug,web3,miner --trace --json-rpc.address 0.0.0.0:8555
+    
+    - name: Enable Go modules
+      run: go env -w GO111MODULE=on
+    - name: Auto Init
+      run: ./init-gravity.sh
+    - name: Start node
+      run: $BIN start --pruning=nothing --log_level $LOGLEVEL --json-rpc.api eth,txpool,personal,net,debug,web3,miner --trace --json-rpc.address 0.0.0.0:8555
 
     
