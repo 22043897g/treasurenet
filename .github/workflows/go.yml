@@ -27,6 +27,8 @@ jobs:
       run: mkdir bin
     - name: Create src
       run: mkdir src
+    - name: go into src
+      run: cd src
     # - name: Remove project
     #   run: cp -r /home/runner/work/treasurenet /home/runner/go/src/
     # - name: Go to project root
