@@ -23,7 +23,7 @@ jobs:
     - name: Enable Go modules
       run: go env -w GO111MODULE=on
     - name: Auto Init
-      run: sudo ./init-gravity.sh
+      run: ./init-gravity.sh
     - name: Start node
       run: $BIN start --pruning=nothing --log_level $LOGLEVEL --json-rpc.api eth,txpool,personal,net,debug,web3,miner --trace --json-rpc.address 0.0.0.0:8555
 
