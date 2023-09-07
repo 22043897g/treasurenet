@@ -4,13 +4,10 @@
 name: Go
 
 on:
-  push:
-    branches: [ "hotfix/1.0.1" ]
   pull_request:
     branches: [ "hotfix/1.0.1" ]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -26,6 +23,13 @@ jobs:
       run: chmod +x init-gravity-action.sh
     - name: Auto Init
       run: ./init-gravity-action.sh
-  
+  update_release_draft:
+    permissions:
+      contents: write  # for release-drafter/release-drafter to create a github release
+      pull-requests: write  # for release-drafter/release-drafter to add label to PR
+    runs-on: ubuntu-latest    
+    steps:
+    - uses: release-drafter/release-drafter@v5
+      
 
     
