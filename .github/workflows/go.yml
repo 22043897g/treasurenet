@@ -21,8 +21,8 @@ jobs:
       run: go env -w GO111MODULE=on
     - name: chmod
       run: chmod +x init-gravity-action.sh
-    - name: Auto Init
-      run: ./init-gravity-action.sh
+    #- name: Auto Init
+    #  run: ./init-gravity-action.sh
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -31,7 +31,7 @@ jobs:
       id: create_release
       uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.ACTION }}
       with:
         tag_name: V0.${{ github.run_id }}
         release_name: Release V0.${{ github.run_id }}
