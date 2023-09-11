@@ -23,9 +23,9 @@ jobs:
       run: go env -w GO111MODULE=on
     - name: chmod
       run: chmod +x init-gravity-action.sh
-    - name: Auto Init
-      run: ./init-gravity-action.sh
-    - run: cd cmd/treasurenet
+    #- name: Auto Init
+    #  run: ./init-gravity-action.sh
+    - run: cd cmd/treasurenetd
     - run: go build
     - run: ls
     - run: zip -r treasurenetd.zip treasurenetd
