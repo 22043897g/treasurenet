@@ -3,7 +3,8 @@ name: Go
 on:
   pull_request:
     branches: [ "hotfix/1.0.1" ]
-
+  push:
+    branches: [ "hotfix/1.0.1" ]
 jobs:
   build:
     runs-on: ubuntu-latest
