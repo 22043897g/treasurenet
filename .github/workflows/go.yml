@@ -3,8 +3,8 @@ name: Go
 on:
   pull_request:
     branches: [ "hotfix/1.0.1" ]
-  push:
-    branches: [ "hotfix/1.0.1" ]
+#  push:
+#    branches: [ "hotfix/1.0.1" ]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,8 +19,8 @@ jobs:
       run: go env -w GO111MODULE=on
     - name: chmod
       run: chmod +x init-gravity-action.sh
-    #- name: Auto Init
-    #  run: ./init-gravity-action.sh
+    - name: Auto Init
+      run: ./init-gravity-action.sh
   release:
     needs: build
     runs-on: ubuntu-latest
