@@ -43,7 +43,7 @@ jobs:
         draft: false
         prerelease: false
     - name: test
-      run: zip -r treasurenetd.zip test.md
+      run: ls && zip -r treasurenetd.zip README.md
     - name: Upload Release Asset
       id: upload-release-asset 
       uses: actions/upload-release-asset@v1
