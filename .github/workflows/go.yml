@@ -29,11 +29,6 @@ jobs:
     #  run: ./build.sh
     - name: test
       run: zip -r treasurenetd.zip README.md
-    
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
