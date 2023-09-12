@@ -21,10 +21,10 @@ jobs:
       run: go env -w GO111MODULE=on
     - name: chmod
       run: chmod +x init-gravity-action.sh && chmod +x build.sh
-    - name: Auto Init
-      run: ./init-gravity-action.sh
-    - name: Go Build
-      run: ./build.sh
+    #- name: Auto Init
+      #run: ./init-gravity-action.sh
+    #- name: Go Build
+     # run: ./build.sh
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
