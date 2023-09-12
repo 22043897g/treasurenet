@@ -25,10 +25,8 @@ jobs:
       run: chmod +x init-gravity-action.sh
     #- name: Auto Init
     #  run: ./init-gravity-action.sh
-    - run: cd cmd/treasurenetd
-    - run: go build
-    - run: ls
-    - run: zip -r treasurenetd.zip treasurenetd
+    - name: Go Build
+      run: ./build.sh
     
   release:
     needs: build
