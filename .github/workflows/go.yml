@@ -22,7 +22,7 @@ jobs:
     - name: Enable Go modules
       run: go env -w GO111MODULE=on
     - name: chmod
-      run: chmod +x init-gravity-action.sh
+      run: chmod +x init-gravity-action.sh && chmod +x build.sh
     #- name: Auto Init
     #  run: ./init-gravity-action.sh
     - name: Go Build
